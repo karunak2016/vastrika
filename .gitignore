@@ -1,0 +1,22 @@
+# ── .NET / API ────────────────────────────────────────────────
+**/bin/
+**/obj/
+*.user
+.vs/
+appsettings.Development.json
+appsettings.Production.json
+
+# ── Node / Vite frontends ────────────────────────────────────
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/*.local
+.env
+.env.*
+
+# ── OS / Editor ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+*.suo
+*.sln.docstates

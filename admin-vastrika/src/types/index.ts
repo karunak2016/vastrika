@@ -1,0 +1,182 @@
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+export interface AdminUser {
+  name: string
+  email: string
+  role: string
+}
+
+export interface AdminLoginRequest {
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  token: string
+  name: string
+  email: string
+  role: string
+  expiresAt: string
+}
+
+// ─── Category ────────────────────────────────────────────────────────────────
+
+export interface Category {
+  id: number
+  name: string
+  description?: string
+  isActive: boolean
+}
+
+// ─── Product ─────────────────────────────────────────────────────────────────
+
+export interface Product {
+  id: number
+  name: string
+  description: string
+  price: number
+  discountedPrice?: number
+  categoryId: number
+  categoryName: string
+  fabric: string
+  color: string
+  stockQuantity: number
+  isActive: boolean
+  imageUrls: string[]
+  defaultImageUrl?: string
+  hasBlousePiece: boolean
+  careInstructions?: string
+  deliveryDays: number
+  createdAt: string
+}
+
+export interface ProductRequest {
+  name: string
+  description: string
+  price: number
+  discountedPrice?: number
+  categoryId: number
+  fabric: string
+  color: string
+  stockQuantity: number
+  hasBlousePiece?: boolean
+  careInstructions?: string
+  deliveryDays?: number
+}
+
+// ─── Order ───────────────────────────────────────────────────────────────────
+
+export type OrderStatus = 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled'
+
+export interface OrderItem {
+  productId: number
+  productName: string
+  imageUrl?: string
+  quantity: number
+  unitPrice: number
+  subtotal: number
+}
+
+export interface Order {
+  id: number
+  userId: number
+  customerName?: string
+  customerEmail?: string
+  orderStatus: string
+  paymentStatus: string
+  paymentMethod: string
+  totalAmount: number
+  discountAmount: number
+  finalAmount: number
+  awbCode?: string
+  items: OrderItem[]
+  createdAt: string
+}
+
+export interface PaginatedOrders {
+  items: Order[]
+  totalCount: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+// ─── Customer ────────────────────────────────────────────────────────────────
+
+export interface Customer {
+  id: number
+  name: string
+  email: string
+  phone?: string
+  totalOrders: number
+  totalSpent: number
+  createdAt: string
+}
+
+export interface PaginatedCustomers {
+  items: Customer[]
+  totalCount: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+
+export interface MonthlyStats {
+  month: string
+  revenue: number
+  orders: number
+}
+
+export interface DashboardSummary {
+  totalRevenue: number
+  totalOrders: number
+  totalCustomers: number
+  totalProducts: number
+  pendingOrders: number
+}
+
+export interface DashboardStats {
+  summary: DashboardSummary
+  monthly: MonthlyStats[]
+}
+
+// ─── Shipping ────────────────────────────────────────────────────────────────
+
+export interface ShipmentResponse {
+  awbCode: string
+  shipmentId: string
+}
+
+// ─── Coupons ─────────────────────────────────────────────────────────────────
+
+export interface Coupon {
+  id: number
+  code: string | null
+  description: string
+  discountType: 'Percentage' | 'Fixed'
+  discountValue: number
+  minCartAmount: number | null
+  maxDiscount: number | null
+  startDate: string | null
+  endDate: string | null
+  isActive: boolean
+  usageLimit: number | null
+  usedCount: number
+  festivalName: string | null
+  createdAt: string
+}
+
+export interface CreateCouponPayload {
+  code?: string
+  description: string
+  discountType: 'Percentage' | 'Fixed'
+  discountValue: number
+  minCartAmount?: number
+  maxDiscount?: number
+  startDate?: string
+  endDate?: string
+  usageLimit?: number
+  festivalName?: string
+}

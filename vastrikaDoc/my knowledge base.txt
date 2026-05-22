@@ -1,0 +1,23 @@
+cd D:/project/vastrika/api-vastrika
+git init
+git remote add origin https://github.com/karunak2016/api-houseofvastrika.git
+git branch -M main
+git pull origin main
+
+git status
+git add .
+git commit -m "your message"
+git commit -m "added login api"
+git push origin main
+
+
+cd D:/project/vastrika/api-vastrika
+git pull origin main
+git add .
+git commit -m "updated product api"
+git push origin main
+
+
+git branch
+git remote -v
+git status

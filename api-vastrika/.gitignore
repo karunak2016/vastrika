@@ -1,0 +1,17 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/HouseOfVastrikaa
+/HouseOfVastrikaa.Domain/obj/Debug/net9.0/HouseOfVastrikaa.Domain.AssemblyInfo.cs
+/HouseOfVastrikaa.Domain/obj/Debug/net9.0/HouseOfVastrikaa.Domain.AssemblyInfoInputs.cache
+/HouseOfVastrikaa.API/obj/Debug/net9.0/HouseOfVastrikaa.API.AssemblyInfo.cs
+/HouseOfVastrikaa.API/obj/Debug/net9.0/HouseOfVastrikaa.API.AssemblyInfoInputs.cache
+/HouseOfVastrikaa.Application/obj/Debug/net9.0/HouseOfVastrikaa.Application.AssemblyInfo.cs
+/HouseOfVastrikaa.Application/obj/Debug/net9.0/HouseOfVastrikaa.Application.AssemblyInfoInputs.cache
+/HouseOfVastrikaa.Infrastructure/obj/Debug/net9.0/HouseOfVastrikaa.Infrastructure.AssemblyInfo.cs
+/HouseOfVastrikaa.Infrastructure/obj/Debug/net9.0/HouseOfVastrikaa.Infrastructure.AssemblyInfoInputs.cache
+/HouseOfVastrikaa.Tests/bin/Debug/net9.0/.msCoverageSourceRootsMapping_HouseOfVastrikaa.Tests
+/HouseOfVastrikaa.Tests/bin/Debug/net9.0/CoverletSourceRootsMapping_HouseOfVastrikaa.Tests
+/HouseOfVastrikaa.Tests/obj/Debug/net9.0/HouseOfVastrikaa.Tests.AssemblyInfo.cs
+/HouseOfVastrikaa.Tests/obj/Debug/net9.0/HouseOfVastrikaa.Tests.AssemblyInfoInputs.cache

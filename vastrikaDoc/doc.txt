@@ -1,0 +1,98 @@
+The Full Payment Flow
+
+Customer places order  →  Creates Razorpay order  →  Customer pays  →  Backend verifies  →  Order marked Paid
+Step 1 — Customer Places the Order
+Before payment even starts, the customer calls POST /api/orders. This creates an order in your DB with PaymentStatus = "Pending" and returns an orderId (e.g. 42).
+
+Step 2 — Create a Razorpay Order
+Endpoint: POST /api/payment/create-order
+
+What the frontend sends:
+
+
+{ "orderId": 42 }
+What PaymentService.CreateRazorpayOrderAsync does:
+
+
+// 1. Fetch the order from DB to get the amount
+var (order, _) = await _orderRepo.GetByIdAsync(orderId);
+
+// 2. Convert rupees → paise  (Razorpay requires paise)
+//    ₹10,999  →  1099900
+var amountInPaise = (long)(order.FinalAmount * 100);
+
+// 3. Call Razorpay API to create a payment session
+var razorpayOrderId = await _razorpay.CreateOrderAsync(amountInPaise, "INR", orderId.ToString());
+RazorpayService.CreateOrderAsync talks to Razorpay's server using your KeyId + KeySecret:
+
+
+_client = new RazorpayClient(config["Razorpay:KeyId"], config["Razorpay:KeySecret"]);
+
+var options = new Dictionary<string, object>
+{
+    ["amount"]   = amountInPaise,  // 1099900
+    ["currency"] = "INR",
+    ["receipt"]  = "42"            // your internal order ID
+};
+var order = _client.Order.Create(options);
+return (string)order["id"];        // returns "order_Nxxxxxxxxxxx"
+What the frontend gets back:
+
+
+{
+  "razorpayOrderId": "order_Nxxxxxxxxxxx",
+  "amount": 1099900,
+  "currency": "INR",
+  "keyId": "rzp_test_xxxxxxxxxxxx"
+}
+The frontend uses razorpayOrderId + keyId + amount to open the Razorpay payment popup.
+
+Step 3 — Customer Pays in the Popup
+The Razorpay popup handles the actual card/UPI/wallet transaction. Your backend is not involved here. When the payment succeeds, Razorpay gives the frontend three values:
+
+Value	Example	What it is
+razorpayOrderId	order_Nxxx	The order ID you created in Step 2
+razorpayPaymentId	pay_Nxxx	Proof that payment happened
+razorpaySignature	a3f9...	Razorpay's tamper-proof signature
+Step 4 — Verify the Payment
+Endpoint: POST /api/payment/verify
+
+What the frontend sends:
+
+
+{
+  "orderId": 42,
+  "razorpayOrderId": "order_Nxxx",
+  "razorpayPaymentId": "pay_Nxxx",
+  "razorpaySignature": "a3f9bc..."
+}
+What PaymentService.VerifyPaymentAsync does:
+
+
+// 1. Recreate the signature on YOUR server using the secret key
+var payload = $"{dto.RazorpayOrderId}|{dto.RazorpayPaymentId}";
+//  = "order_Nxxx|pay_Nxxx"
+
+using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+var hash     = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+var computed = BitConverter.ToString(hash).Replace("-", "").ToLower();
+//  = "a3f9bc..."  (should match what Razorpay sent)
+
+// 2. Compare — if they don't match, payment was tampered with
+if (computed != dto.RazorpaySignature) return false;
+
+// 3. Signatures match → mark order as Paid in DB
+await _orderRepo.UpdateStatusAsync(dto.OrderId, "Confirmed", "Paid", null, null);
+Why the signature check matters:
+Without it, anyone could send { "razorpayPaymentId": "fake" } and get their order marked as Paid for free. The HMAC signature can only be produced by someone who knows your KeySecret — which only Razorpay and your server have.
+
+Summary
+
+POST /api/orders              → DB order created (Pending)
+        ↓
+POST /api/payment/create-order → Razorpay order created, frontend opens popup
+        ↓
+   [Customer pays in Razorpay popup]
+        ↓
+POST /api/payment/verify       → Signature verified, DB order → Confirmed + Paid
+The key thing to remember: your server never touches card details. Razorpay handles the actual payment. Your job is just to (1) tell Razorpay how much to charge, and (2) verify the signature afterwards to confirm payment really happened.
