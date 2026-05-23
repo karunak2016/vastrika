@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5095',
+        target: 'https://vastrikaa-api-dzh9fucdb3gtemak.centralindia-01.azurewebsites.net',
         changeOrigin: true,
       },
     },
