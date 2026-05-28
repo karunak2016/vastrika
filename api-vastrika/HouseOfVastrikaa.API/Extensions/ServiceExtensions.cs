@@ -5,6 +5,7 @@ using HouseOfVastrikaa.Domain.Entities;
 using HouseOfVastrikaa.Infrastructure.Data;
 using HouseOfVastrikaa.Infrastructure.ExternalServices;
 using HouseOfVastrikaa.Infrastructure.Repositories;
+using HouseOfVastrikaa.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -54,6 +55,7 @@ public static class ServiceExtensions
     {
         // Infrastructure
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
+        services.AddSingleton<BlobStorageService>();
 
         // Repositories
         services.AddScoped<UserRepository>();

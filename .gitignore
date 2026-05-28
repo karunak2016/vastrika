@@ -21,3 +21,7 @@ Thumbs.db
 .idea/
 *.suo
 *.sln.docstates
+/api-vastrika/HouseOfVastrikaa.API/Properties/PublishProfiles
+/vastrikaDoc/doc.txt
+/vastrikaDoc/vastrikaa-api.PublishSettings
+/vastrikaDoc/my knowledge base.txt
