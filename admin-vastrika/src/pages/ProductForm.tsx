@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Plus, Star } from 'lucide-react'
+import { Star, Upload } from 'lucide-react'
 import type { Category, ProductRequest } from '../types'
 import { productsApi } from '../api/products'
 import { categoriesApi } from '../api/categories'
+import { uploadApi } from '../api/upload'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Spinner } from '../components/ui/Spinner'
@@ -18,10 +19,12 @@ export function ProductForm() {
   const [form, setForm] = useState<ProductRequest>(empty)
   const [categories, setCategories] = useState<Category[]>([])
   const [images, setImages] = useState<{ url: string; isDefault: boolean }[]>([])
-  const [newImageUrl, setNewImageUrl] = useState('')
+  const [pendingImages, setPendingImages] = useState<string[]>([])
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     categoriesApi.list().then(setCategories).catch(() => {})
@@ -40,6 +43,29 @@ export function ProductForm() {
     }
   }
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    setUploadingImage(true)
+    setError('')
+    try {
+      const url = await uploadApi.uploadImage(file)
+      if (isEdit && id) {
+        const isDefault = images.length === 0
+        await productsApi.addImage(Number(id), url, isDefault)
+        setImages((prev) => [...prev, { url, isDefault }])
+      } else {
+        setPendingImages((prev) => [...prev, url])
+      }
+    } catch {
+      setError('Image upload failed. Please try again.')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
   async function handleSave() {
     if (!form.name || !form.categoryId || form.price <= 0) {
       setError('Name, category, and price are required.')
@@ -51,7 +77,10 @@ export function ProductForm() {
       if (isEdit && id) {
         await productsApi.update(Number(id), form)
       } else {
-        await productsApi.create(form)
+        const created = await productsApi.create(form)
+        for (let i = 0; i < pendingImages.length; i++) {
+          await productsApi.addImage(created.id, pendingImages[i], i === 0)
+        }
       }
       navigate('/products')
     } catch {
@@ -61,15 +90,11 @@ export function ProductForm() {
     }
   }
 
-  async function handleAddImage() {
-    if (!newImageUrl.trim() || !id) return
-    const isDefault = images.length === 0
-    await productsApi.addImage(Number(id), newImageUrl.trim(), isDefault)
-    setImages((prev) => [...prev, { url: newImageUrl.trim(), isDefault }])
-    setNewImageUrl('')
-  }
-
   if (loading) return <div className="flex justify-center py-32"><Spinner size="lg" /></div>
+
+  const displayImages = isEdit
+    ? images
+    : pendingImages.map((url, i) => ({ url, isDefault: i === 0 }))
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -118,47 +143,46 @@ export function ProductForm() {
         </div>
       </div>
 
-      {/* Images (only in edit mode) */}
-      {isEdit && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Product Images</h2>
+      {/* Images */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Product Images</h2>
 
-          {images.length > 0 && (
-            <div className="grid grid-cols-3 gap-3">
-              {images.map((img, i) => (
-                <div key={i} className="relative group">
-                  <img src={img.url} alt="" className="h-24 w-full rounded-lg object-cover object-top" />
-                  {img.isDefault && (
-                    <span className="absolute left-1 top-1 rounded bg-primary-800 px-1.5 py-0.5 text-[10px] text-white flex items-center gap-0.5">
-                      <Star className="h-2.5 w-2.5" /> Primary
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <Input
-              id="imgUrl"
-              placeholder="Paste image URL..."
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              className="flex-1"
-            />
-            <Button size="sm" variant="outline" onClick={handleAddImage}>
-              <Plus className="h-4 w-4" /> Add
-            </Button>
+        {displayImages.length > 0 && (
+          <div className="grid grid-cols-3 gap-3">
+            {displayImages.map((img, i) => (
+              <div key={i} className="relative">
+                <img src={img.url} alt="" className="h-24 w-full rounded-lg object-cover object-top" />
+                {img.isDefault && (
+                  <span className="absolute left-1 top-1 rounded bg-primary-800 px-1.5 py-0.5 text-[10px] text-white flex items-center gap-0.5">
+                    <Star className="h-2.5 w-2.5" /> Primary
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
-          <p className="text-xs text-gray-400">First image added becomes the primary image automatically.</p>
-        </div>
-      )}
+        )}
 
-      {!isEdit && (
-        <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
-          Save the product first, then you can add images from the edit page.
-        </div>
-      )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => fileInputRef.current?.click()}
+          loading={uploadingImage}
+        >
+          <Upload className="h-4 w-4" />
+          {uploadingImage ? 'Uploading...' : 'Upload Image'}
+        </Button>
+        <p className="text-xs text-gray-400">
+          Accepted: JPEG, PNG, WebP. First image becomes the primary.
+          {!isEdit && pendingImages.length > 0 && ` ${pendingImages.length} image${pendingImages.length > 1 ? 's' : ''} will be saved with the product.`}
+        </p>
+      </div>
 
       {/* Actions */}
       <div className="flex gap-3">
