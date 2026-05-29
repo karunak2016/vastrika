@@ -14,8 +14,10 @@ public class DbConnectionFactory : IDbConnectionFactory
 
     public DbConnectionFactory(IConfiguration config)
     {
-        _connectionString = config.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("DefaultConnection is missing.");
+        var cs = config.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(cs))
+            throw new InvalidOperationException("DefaultConnection is not configured.");
+        _connectionString = cs;
     }
 
     public SqlConnection Create() => new(_connectionString);

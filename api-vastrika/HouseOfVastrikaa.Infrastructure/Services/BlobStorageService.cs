@@ -1,3 +1,4 @@
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
@@ -8,6 +9,7 @@ public class BlobStorageService
 {
     private readonly string? _connectionString;
     private readonly string _containerName;
+    private BlobContainerClient? _client;
 
     public BlobStorageService(IConfiguration configuration)
     {
@@ -15,16 +17,24 @@ public class BlobStorageService
         _containerName = configuration["AzureStorage:ContainerName"] ?? "products";
     }
 
-    private BlobContainerClient GetContainer()
+    private async Task<BlobContainerClient> GetContainerAsync()
     {
         if (string.IsNullOrWhiteSpace(_connectionString))
             throw new InvalidOperationException("AzureStorage:ConnectionString is not configured.");
-        return new BlobContainerClient(_connectionString, _containerName);
+
+        if (_client is null)
+        {
+            _client = new BlobContainerClient(_connectionString, _containerName);
+            await _client.CreateIfNotExistsAsync(PublicAccessType.Blob);
+        }
+
+        return _client;
     }
 
     public async Task<string> UploadImageAsync(Stream imageStream, string fileName, string contentType)
     {
-        var blobClient = GetContainer().GetBlobClient(fileName);
+        var container = await GetContainerAsync();
+        var blobClient = container.GetBlobClient(fileName);
 
         await blobClient.UploadAsync(imageStream, new BlobHttpHeaders
         {
@@ -36,9 +46,9 @@ public class BlobStorageService
 
     public async Task DeleteImageAsync(string imageUrl)
     {
+        var container = await GetContainerAsync();
         var uri = new Uri(imageUrl);
         var fileName = Path.GetFileName(uri.LocalPath);
-        var blobClient = GetContainer().GetBlobClient(fileName);
-        await blobClient.DeleteIfExistsAsync();
+        await container.GetBlobClient(fileName).DeleteIfExistsAsync();
     }
 }

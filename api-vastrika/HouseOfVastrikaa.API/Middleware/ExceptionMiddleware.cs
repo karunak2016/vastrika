@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using Azure;
+using Microsoft.Data.SqlClient;
 
 namespace HouseOfVastrikaa.API.Middleware;
 
@@ -31,6 +33,16 @@ public class ExceptionMiddleware
         catch (InvalidOperationException ex)
         {
             await WriteErrorAsync(context, HttpStatusCode.BadRequest, ex.Message);
+        }
+        catch (SqlException ex)
+        {
+            _logger.LogError(ex, "Database error");
+            await WriteErrorAsync(context, HttpStatusCode.ServiceUnavailable, "Database unavailable. Please try again later.");
+        }
+        catch (RequestFailedException ex)
+        {
+            _logger.LogError(ex, "Azure Storage error");
+            await WriteErrorAsync(context, HttpStatusCode.BadGateway, "Storage service error. Please try again later.");
         }
         catch (Exception ex)
         {
