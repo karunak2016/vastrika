@@ -1,3 +1,5 @@
+using Microsoft.OpenApi;
+
 namespace HouseOfVastrikaa.API.Extensions;
 
 public static class SwaggerExtensions
@@ -11,6 +13,22 @@ public static class SwaggerExtensions
                 Title = "House of Vastrikaa API",
                 Version = "v1",
                 Description = "RESTful API for House of Vastrikaa saree eCommerce platform"
+            });
+
+            var jwtScheme = new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Enter your JWT token. Example: eyJhbGci...",
+            };
+
+            options.AddSecurityDefinition("Bearer", jwtScheme);
+            options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+            {
+                { new OpenApiSecuritySchemeReference("Bearer", doc), new List<string>() }
             });
         });
 

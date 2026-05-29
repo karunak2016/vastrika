@@ -33,4 +33,5 @@ public class UploadController : ControllerBase
 
         return Ok(new { url });
     }
+
 }
