@@ -17,8 +17,8 @@ export const productsApi = {
   deactivate: (id: number) =>
     apiClient.delete(`/products/${id}`).then((r) => r.data),
 
-  addImage: (productId: number, imageUrl: string, isDefault: boolean) =>
-    apiClient.post(`/products/${productId}/images`, { imageUrl, isDefault }).then((r) => r.data),
+  addImage: (productId: number, imageUrl: string, isDefault: boolean): Promise<number> =>
+    apiClient.post<{ imageId: number }>(`/products/${productId}/images`, { imageUrl, isDefault }).then((r) => r.data.imageId),
 
   removeImage: (productId: number, imageId: number) =>
     apiClient.delete(`/products/${productId}/images/${imageId}`).then((r) => r.data),

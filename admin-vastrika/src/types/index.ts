@@ -30,6 +30,12 @@ export interface Category {
 
 // ─── Product ─────────────────────────────────────────────────────────────────
 
+export interface ProductImage {
+  id: number
+  url: string
+  isDefault: boolean
+}
+
 export interface Product {
   id: number
   name: string
@@ -42,6 +48,7 @@ export interface Product {
   color: string
   stockQuantity: number
   isActive: boolean
+  images: ProductImage[]
   imageUrls: string[]
   defaultImageUrl?: string
   hasBlousePiece: boolean

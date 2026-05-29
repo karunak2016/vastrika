@@ -130,8 +130,8 @@ public class ProductsController : ControllerBase
         try
         {
             _logger.LogInformation("Adding image to product {Id}", id);
-            await _products.AddImageAsync(id, dto.ImageUrl, dto.IsDefault);
-            return Ok();
+            var imageId = await _products.AddImageAsync(id, dto.ImageUrl, dto.IsDefault);
+            return Ok(new { imageId });
         }
         catch (Exception ex)
         {

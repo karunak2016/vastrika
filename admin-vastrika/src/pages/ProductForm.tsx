@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Star, Upload } from 'lucide-react'
-import type { Category, ProductRequest } from '../types'
+import { Star, Upload, X } from 'lucide-react'
+import type { Category, ProductImage, ProductRequest } from '../types'
 import { productsApi } from '../api/products'
 import { categoriesApi } from '../api/categories'
 import { uploadApi } from '../api/upload'
@@ -18,9 +18,10 @@ export function ProductForm() {
 
   const [form, setForm] = useState<ProductRequest>(empty)
   const [categories, setCategories] = useState<Category[]>([])
-  const [images, setImages] = useState<{ url: string; isDefault: boolean }[]>([])
-  const [pendingImages, setPendingImages] = useState<string[]>([])
+  const [images, setImages] = useState<ProductImage[]>([])
+  const [pendingImages, setPendingImages] = useState<ProductImage[]>([])
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [deletingImageId, setDeletingImageId] = useState<number | null>(null)
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -31,7 +32,7 @@ export function ProductForm() {
     if (isEdit && id) {
       productsApi.getById(Number(id)).then((p) => {
         setForm({ name: p.name, description: p.description, price: p.price, categoryId: p.categoryId, fabric: p.fabric, color: p.color, stockQuantity: p.stockQuantity })
-        setImages((p.imageUrls ?? []).map((url, i) => ({ url, isDefault: url === p.defaultImageUrl || i === 0 })))
+        setImages(p.images ?? (p.imageUrls ?? []).map((url, i) => ({ id: -(i + 1), url, isDefault: url === p.defaultImageUrl || i === 0 })))
       }).finally(() => setLoading(false))
     }
   }, [id, isEdit])
@@ -54,15 +55,36 @@ export function ProductForm() {
       const url = await uploadApi.uploadImage(file)
       if (isEdit && id) {
         const isDefault = images.length === 0
-        await productsApi.addImage(Number(id), url, isDefault)
-        setImages((prev) => [...prev, { url, isDefault }])
+        const imageId = await productsApi.addImage(Number(id), url, isDefault)
+        setImages((prev) => [...prev, { id: imageId, url, isDefault }])
       } else {
-        setPendingImages((prev) => [...prev, url])
+        const tempId = -(pendingImages.length + 1)
+        setPendingImages((prev) => [...prev, { id: tempId, url, isDefault: prev.length === 0 }])
       }
     } catch {
       setError('Image upload failed. Please try again.')
     } finally {
       setUploadingImage(false)
+    }
+  }
+
+  async function handleDeleteImage(img: ProductImage) {
+    if (isEdit && id) {
+      if (img.id < 0) return
+      setDeletingImageId(img.id)
+      try {
+        await productsApi.removeImage(Number(id), img.id)
+        setImages((prev) => prev.filter((i) => i.id !== img.id))
+      } catch {
+        setError('Failed to delete image. Please try again.')
+      } finally {
+        setDeletingImageId(null)
+      }
+    } else {
+      setPendingImages((prev) => {
+        const updated = prev.filter((i) => i.id !== img.id)
+        return updated.map((i, idx) => ({ ...i, isDefault: idx === 0 }))
+      })
     }
   }
 
@@ -79,7 +101,7 @@ export function ProductForm() {
       } else {
         const created = await productsApi.create(form)
         for (let i = 0; i < pendingImages.length; i++) {
-          await productsApi.addImage(created.id, pendingImages[i], i === 0)
+          await productsApi.addImage(created.id, pendingImages[i].url, i === 0)
         }
       }
       navigate('/products')
@@ -92,9 +114,7 @@ export function ProductForm() {
 
   if (loading) return <div className="flex justify-center py-32"><Spinner size="lg" /></div>
 
-  const displayImages = isEdit
-    ? images
-    : pendingImages.map((url, i) => ({ url, isDefault: i === 0 }))
+  const displayImages = isEdit ? images : pendingImages
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -149,14 +169,23 @@ export function ProductForm() {
 
         {displayImages.length > 0 && (
           <div className="grid grid-cols-3 gap-3">
-            {displayImages.map((img, i) => (
-              <div key={i} className="relative">
+            {displayImages.map((img) => (
+              <div key={img.id} className="relative group">
                 <img src={img.url} alt="" className="h-24 w-full rounded-lg object-cover object-top" />
                 {img.isDefault && (
                   <span className="absolute left-1 top-1 rounded bg-primary-800 px-1.5 py-0.5 text-[10px] text-white flex items-center gap-0.5">
                     <Star className="h-2.5 w-2.5" /> Primary
                   </span>
                 )}
+                <button
+                  onClick={() => handleDeleteImage(img)}
+                  disabled={deletingImageId === img.id}
+                  className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
+                >
+                  {deletingImageId === img.id
+                    ? <Spinner size="sm" />
+                    : <X className="h-3 w-3" />}
+                </button>
               </div>
             ))}
           </div>

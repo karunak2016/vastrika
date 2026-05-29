@@ -183,6 +183,12 @@ public class ProductService : IProductService
     private static ProductDto MapToDto(Product p, IEnumerable<ProductImage> images)
     {
         var imgList = images.OrderBy(i => i.DisplayOrder).ToList();
+        var imageDtos = imgList.Select(i => new ProductImageDto
+        {
+            Id = i.Id,
+            Url = i.ImageUrl,
+            IsDefault = i.IsDefault
+        }).ToList();
         return new ProductDto
         {
             Id = p.Id, Name = p.Name, Description = p.Description ?? string.Empty,
@@ -190,8 +196,11 @@ public class ProductService : IProductService
             StockQuantity = p.StockQuantity, Fabric = p.Fabric ?? string.Empty,
             Color = p.Color ?? string.Empty, HasBlousePiece = p.HasBlousePiece,
             CareInstructions = p.CareInstructions, DeliveryDays = p.DeliveryDays,
-            ImageUrls = imgList.Select(i => i.ImageUrl).ToList(),
-            DefaultImageUrl = imgList.FirstOrDefault(i => i.IsDefault)?.ImageUrl
+            CategoryId = p.CategoryId, CategoryName = p.CategoryName ?? string.Empty,
+            IsActive = p.IsActive,
+            Images = imageDtos,
+            ImageUrls = imageDtos.Select(i => i.Url).ToList(),
+            DefaultImageUrl = imageDtos.FirstOrDefault(i => i.IsDefault)?.Url
         };
     }
 }

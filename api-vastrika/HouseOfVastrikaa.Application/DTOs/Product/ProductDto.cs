@@ -1,5 +1,12 @@
 namespace HouseOfVastrikaa.Application.DTOs.Product;
 
+public class ProductImageDto
+{
+    public int Id { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public bool IsDefault { get; set; }
+}
+
 public class ProductDto
 {
     public int Id { get; set; }
@@ -13,7 +20,10 @@ public class ProductDto
     public bool HasBlousePiece { get; set; }
     public string? CareInstructions { get; set; }
     public int DeliveryDays { get; set; }
+    public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public List<ProductImageDto> Images { get; set; } = new();
     public List<string> ImageUrls { get; set; } = new();
     public string? DefaultImageUrl { get; set; }
 }
