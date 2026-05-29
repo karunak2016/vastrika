@@ -65,7 +65,7 @@ public class AddressController : ControllerBase
         }
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPost("update/{id:int}")]
     public async Task<IActionResult> Update(int id, AddressUpsertDto dto)
     {
         try
@@ -94,7 +94,7 @@ public class AddressController : ControllerBase
         }
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpPost("delete/{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         try

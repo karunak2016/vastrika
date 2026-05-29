@@ -9,8 +9,8 @@ export const categoriesApi = {
     apiClient.post<Category>('/categories', data).then((r) => r.data),
 
   update: (id: number, data: { name: string; description?: string }) =>
-    apiClient.put<Category>(`/categories/${id}`, data).then((r) => r.data),
+    apiClient.post<Category>(`/categories/update/${id}`, data).then((r) => r.data),
 
   remove: (id: number) =>
-    apiClient.delete(`/categories/${id}`).then((r) => r.data),
+    apiClient.post(`/categories/delete/${id}`).then((r) => r.data),
 }

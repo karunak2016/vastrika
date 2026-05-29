@@ -52,7 +52,7 @@ public class WishlistController : ControllerBase
         }
     }
 
-    [HttpDelete("items/{productId:int}")]
+    [HttpPost("items/remove/{productId:int}")]
     public async Task<IActionResult> Remove(int productId)
     {
         try

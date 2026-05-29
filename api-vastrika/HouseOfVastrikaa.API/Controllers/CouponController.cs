@@ -75,7 +75,7 @@ public class CouponController(ICouponService coupons, ILogger<CouponController> 
         }
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPost("update/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateCouponDto dto)
     {
@@ -91,7 +91,7 @@ public class CouponController(ICouponService coupons, ILogger<CouponController> 
         }
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpPost("delete/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Deactivate(int id)
     {

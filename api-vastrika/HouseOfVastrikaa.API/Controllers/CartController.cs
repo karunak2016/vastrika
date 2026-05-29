@@ -52,7 +52,7 @@ public class CartController : ControllerBase
         }
     }
 
-    [HttpPut("items/{id:int}")]
+    [HttpPost("items/update/{id:int}")]
     public async Task<IActionResult> UpdateItem(int id, [FromBody] int quantity)
     {
         try
@@ -67,7 +67,7 @@ public class CartController : ControllerBase
         }
     }
 
-    [HttpDelete("items/{id:int}")]
+    [HttpPost("items/remove/{id:int}")]
     public async Task<IActionResult> RemoveItem(int id)
     {
         try
@@ -82,7 +82,7 @@ public class CartController : ControllerBase
         }
     }
 
-    [HttpDelete]
+    [HttpPost("clear")]
     public async Task<IActionResult> Clear()
     {
         try

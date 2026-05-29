@@ -11,5 +11,5 @@ export const ordersApi = {
     apiClient.get<Order>(`/orders/${id}`).then((r) => r.data),
 
   updateStatus: (id: number, status: string) =>
-    apiClient.put(`/orders/admin/${id}/status`, { status }).then((r) => r.data),
+    apiClient.post(`/orders/admin/${id}/update-status`, { status }).then((r) => r.data),
 }

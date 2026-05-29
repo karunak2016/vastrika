@@ -87,7 +87,7 @@ public class ProductsController : ControllerBase
         }
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPost("update/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, CreateProductDto dto)
     {
@@ -105,7 +105,7 @@ public class ProductsController : ControllerBase
         }
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpPost("delete/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -140,7 +140,7 @@ public class ProductsController : ControllerBase
         }
     }
 
-    [HttpDelete("{id:int}/images/{imageId:int}")]
+    [HttpPost("{id:int}/images/delete/{imageId:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RemoveImage(int id, int imageId)
     {

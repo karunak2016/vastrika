@@ -66,7 +66,7 @@ public class CategoriesController : ControllerBase
         }
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPost("update/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, UpdateCategoryDto dto)
     {
@@ -89,7 +89,7 @@ public class CategoriesController : ControllerBase
         }
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpPost("delete/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {

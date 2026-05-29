@@ -73,7 +73,7 @@ public class OrdersController : ControllerBase
         }
     }
 
-    [HttpPut("{id:int}/cancel")]
+    [HttpPost("{id:int}/cancel")]
     [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Cancel(int id, [FromBody] string? reason = null)
     {
@@ -107,7 +107,7 @@ public class OrdersController : ControllerBase
         }
     }
 
-    [HttpPut("admin/{id:int}/status")]
+    [HttpPost("admin/{id:int}/update-status")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateStatus(int id, UpdateOrderStatusDto dto)
     {

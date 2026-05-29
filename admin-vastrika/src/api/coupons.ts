@@ -9,8 +9,8 @@ export const couponsApi = {
     apiClient.post<Coupon>('/coupons', data).then((r) => r.data),
 
   update: (id: number, data: CreateCouponPayload & { isActive: boolean }): Promise<Coupon> =>
-    apiClient.put<Coupon>(`/coupons/${id}`, data).then((r) => r.data),
+    apiClient.post<Coupon>(`/coupons/update/${id}`, data).then((r) => r.data),
 
   deactivate: (id: number): Promise<void> =>
-    apiClient.delete(`/coupons/${id}`).then(() => undefined),
+    apiClient.post(`/coupons/delete/${id}`).then(() => undefined),
 }

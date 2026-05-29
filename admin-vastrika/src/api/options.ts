@@ -21,14 +21,14 @@ export const optionsApi = {
     apiClient.post<ProductOption>('/options/colors', { value }).then((r) => r.data),
 
   updateFabric: (id: number, value: string): Promise<ProductOption> =>
-    apiClient.put<ProductOption>(`/options/fabrics/${id}`, { value }).then((r) => r.data),
+    apiClient.post<ProductOption>(`/options/fabrics/update/${id}`, { value }).then((r) => r.data),
 
   updateColor: (id: number, value: string): Promise<ProductOption> =>
-    apiClient.put<ProductOption>(`/options/colors/${id}`, { value }).then((r) => r.data),
+    apiClient.post<ProductOption>(`/options/colors/update/${id}`, { value }).then((r) => r.data),
 
   deleteFabric: (id: number): Promise<void> =>
-    apiClient.delete(`/options/fabrics/${id}`).then(() => undefined),
+    apiClient.post(`/options/fabrics/delete/${id}`).then(() => undefined),
 
   deleteColor: (id: number): Promise<void> =>
-    apiClient.delete(`/options/colors/${id}`).then(() => undefined),
+    apiClient.post(`/options/colors/delete/${id}`).then(() => undefined),
 }

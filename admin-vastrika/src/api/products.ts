@@ -12,14 +12,14 @@ export const productsApi = {
     apiClient.post<Product>('/products', data).then((r) => r.data),
 
   update: (id: number, data: ProductRequest) =>
-    apiClient.put<Product>(`/products/${id}`, data).then((r) => r.data),
+    apiClient.post<Product>(`/products/update/${id}`, data).then((r) => r.data),
 
   deactivate: (id: number) =>
-    apiClient.delete(`/products/${id}`).then((r) => r.data),
+    apiClient.post(`/products/delete/${id}`).then((r) => r.data),
 
   addImage: (productId: number, imageUrl: string, isDefault: boolean): Promise<number> =>
     apiClient.post<{ imageId: number }>(`/products/${productId}/images`, { imageUrl, isDefault }).then((r) => r.data.imageId),
 
   removeImage: (productId: number, imageId: number) =>
-    apiClient.delete(`/products/${productId}/images/${imageId}`).then((r) => r.data),
+    apiClient.post(`/products/${productId}/images/delete/${imageId}`).then((r) => r.data),
 }

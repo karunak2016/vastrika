@@ -38,7 +38,7 @@ public class ProductOptionsController : ControllerBase
         return Ok(new { id, type = "Color", value = dto.Value.Trim() });
     }
 
-    [HttpPut("fabrics/{id:int}")]
+    [HttpPost("fabrics/update/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateFabric(int id, [FromBody] OptionValueDto dto)
     {
@@ -47,7 +47,7 @@ public class ProductOptionsController : ControllerBase
         return Ok(new { id, type = "Fabric", value = dto.Value.Trim() });
     }
 
-    [HttpPut("colors/{id:int}")]
+    [HttpPost("colors/update/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateColor(int id, [FromBody] OptionValueDto dto)
     {
@@ -56,7 +56,7 @@ public class ProductOptionsController : ControllerBase
         return Ok(new { id, type = "Color", value = dto.Value.Trim() });
     }
 
-    [HttpDelete("fabrics/{id:int}")]
+    [HttpPost("fabrics/delete/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteFabric(int id)
     {
@@ -64,7 +64,7 @@ public class ProductOptionsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("colors/{id:int}")]
+    [HttpPost("colors/delete/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteColor(int id)
     {
