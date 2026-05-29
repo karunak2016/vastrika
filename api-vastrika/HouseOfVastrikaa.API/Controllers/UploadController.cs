@@ -19,19 +19,29 @@ public class UploadController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UploadImage(IFormFile file)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest("No file uploaded");
+        try
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
 
-        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
-        if (!allowedTypes.Contains(file.ContentType))
-            return BadRequest("Only JPEG, PNG and WebP images are allowed");
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+            if (!allowedTypes.Contains(file.ContentType))
+                return BadRequest("Only JPEG, PNG and WebP images are allowed");
 
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
 
-        using var stream = file.OpenReadStream();
-        var url = await _blobService.UploadImageAsync(stream, fileName, file.ContentType);
+            using var stream = file.OpenReadStream();
+            var url = await _blobService.UploadImageAsync(stream, fileName, file.ContentType);
 
-        return Ok(new { url });
+            return Ok(new { url });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new {
+                error = ex.Message,
+                details = ex.InnerException?.Message
+            });
+        }
     }
 
 }
