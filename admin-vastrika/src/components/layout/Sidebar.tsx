@@ -1,16 +1,17 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Package, Tag, ShoppingCart, Users, X, Ticket,
+  LayoutDashboard, Package, Tag, ShoppingCart, Users, X, Ticket, Sliders,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 
 const links = [
-  { to: '/',          label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/products',  label: 'Products',  icon: Package },
-  { to: '/categories',label: 'Categories',icon: Tag },
-  { to: '/orders',    label: 'Orders',    icon: ShoppingCart },
-  { to: '/customers', label: 'Customers', icon: Users },
-  { to: '/coupons',   label: 'Coupons',   icon: Ticket },
+  { to: '/',           label: 'Dashboard',  icon: LayoutDashboard, end: true },
+  { to: '/products',   label: 'Products',   icon: Package },
+  { to: '/categories', label: 'Categories', icon: Tag },
+  { to: '/orders',     label: 'Orders',     icon: ShoppingCart },
+  { to: '/customers',  label: 'Customers',  icon: Users },
+  { to: '/coupons',    label: 'Coupons',    icon: Ticket },
+  { to: '/options',    label: 'Options',    icon: Sliders },
 ]
 
 interface SidebarProps {

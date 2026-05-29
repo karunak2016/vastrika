@@ -12,6 +12,7 @@ import { OrderDetail }    from './pages/OrderDetail'
 import { Customers }      from './pages/Customers'
 import { CustomerDetail } from './pages/CustomerDetail'
 import { Coupons }        from './pages/Coupons'
+import { Options }        from './pages/Options'
 
 function RequireAdmin({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="customers" element={<Customers />} />
           <Route path="customers/:id" element={<CustomerDetail />} />
           <Route path="coupons" element={<Coupons />} />
+          <Route path="options" element={<Options />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

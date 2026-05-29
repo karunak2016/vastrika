@@ -5,6 +5,7 @@ import type { Category, ProductImage, ProductRequest } from '../types'
 import { productsApi } from '../api/products'
 import { categoriesApi } from '../api/categories'
 import { uploadApi } from '../api/upload'
+import { optionsApi, type ProductOption } from '../api/options'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Spinner } from '../components/ui/Spinner'
@@ -18,6 +19,8 @@ export function ProductForm() {
 
   const [form, setForm] = useState<ProductRequest>(empty)
   const [categories, setCategories] = useState<Category[]>([])
+  const [fabrics, setFabrics] = useState<ProductOption[]>([])
+  const [colors, setColors] = useState<ProductOption[]>([])
   const [images, setImages] = useState<ProductImage[]>([])
   const [pendingImages, setPendingImages] = useState<ProductImage[]>([])
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -29,6 +32,8 @@ export function ProductForm() {
 
   useEffect(() => {
     categoriesApi.list().then(setCategories).catch(() => {})
+    optionsApi.getFabrics().then(setFabrics).catch(() => {})
+    optionsApi.getColors().then(setColors).catch(() => {})
     if (isEdit && id) {
       productsApi.getById(Number(id)).then((p) => {
         setForm({ name: p.name, description: p.description, price: p.price, categoryId: p.categoryId, fabric: p.fabric, color: p.color, stockQuantity: p.stockQuantity })
@@ -157,8 +162,32 @@ export function ProductForm() {
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <Input id="fabric" label="Fabric" placeholder="Silk" value={form.fabric} onChange={field('fabric')} />
-          <Input id="color" label="Color" placeholder="Red" value={form.color} onChange={field('color')} />
+          <div>
+            <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Fabric</label>
+            <select
+              value={form.fabric}
+              onChange={field('fabric')}
+              className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-800 focus:outline-none"
+            >
+              <option value="">Select fabric</option>
+              {fabrics.map((f) => (
+                <option key={f.id} value={f.value}>{f.value}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Color</label>
+            <select
+              value={form.color}
+              onChange={field('color')}
+              className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-800 focus:outline-none"
+            >
+              <option value="">Select color</option>
+              {colors.map((c) => (
+                <option key={c.id} value={c.value}>{c.value}</option>
+              ))}
+            </select>
+          </div>
           <Input id="stockQuantity" type="number" label="Stock" placeholder="10" value={form.stockQuantity || ''} onChange={field('stockQuantity')} min={0} />
         </div>
       </div>

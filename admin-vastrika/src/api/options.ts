@@ -1,0 +1,34 @@
+import { apiClient } from './client'
+
+export interface ProductOption {
+  id: number
+  type: string
+  value: string
+  displayOrder: number
+}
+
+export const optionsApi = {
+  getFabrics: (): Promise<ProductOption[]> =>
+    apiClient.get<ProductOption[]>('/options/fabrics').then((r) => r.data),
+
+  getColors: (): Promise<ProductOption[]> =>
+    apiClient.get<ProductOption[]>('/options/colors').then((r) => r.data),
+
+  createFabric: (value: string): Promise<ProductOption> =>
+    apiClient.post<ProductOption>('/options/fabrics', { value }).then((r) => r.data),
+
+  createColor: (value: string): Promise<ProductOption> =>
+    apiClient.post<ProductOption>('/options/colors', { value }).then((r) => r.data),
+
+  updateFabric: (id: number, value: string): Promise<ProductOption> =>
+    apiClient.put<ProductOption>(`/options/fabrics/${id}`, { value }).then((r) => r.data),
+
+  updateColor: (id: number, value: string): Promise<ProductOption> =>
+    apiClient.put<ProductOption>(`/options/colors/${id}`, { value }).then((r) => r.data),
+
+  deleteFabric: (id: number): Promise<void> =>
+    apiClient.delete(`/options/fabrics/${id}`).then(() => undefined),
+
+  deleteColor: (id: number): Promise<void> =>
+    apiClient.delete(`/options/colors/${id}`).then(() => undefined),
+}
