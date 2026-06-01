@@ -10,6 +10,7 @@ public interface IProductOptionsRepository
     Task<IEnumerable<ProductOption>> GetByTypeAsync(string type);
     Task<int> CreateAsync(string type, string value);
     Task UpdateAsync(int id, string value);
+    Task ReorderAsync(int id, int displayOrder);
     Task DeleteAsync(int id);
 }
 
@@ -45,6 +46,15 @@ public class ProductOptionsRepository : IProductOptionsRepository
         await conn.ExecuteAsync(
             "sp_ProductOptions_Update",
             new { Id = id, Value = value },
+            commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task ReorderAsync(int id, int displayOrder)
+    {
+        using var conn = _db.Create();
+        await conn.ExecuteAsync(
+            "sp_ProductOptions_UpdateOrder",
+            new { Id = id, DisplayOrder = displayOrder },
             commandType: CommandType.StoredProcedure);
     }
 

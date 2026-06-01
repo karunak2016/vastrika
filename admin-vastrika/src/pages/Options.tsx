@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Check, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, Check, X, ChevronUp, ChevronDown } from 'lucide-react'
 import { optionsApi, type ProductOption } from '../api/options'
 import { Button } from '../components/ui/Button'
 import { Spinner } from '../components/ui/Spinner'
@@ -10,15 +10,18 @@ interface OptionPanelProps {
   loading: boolean
   onCreate: (value: string) => Promise<void>
   onUpdate: (id: number, value: string) => Promise<void>
+  onReorder: (id: number, direction: 'up' | 'down') => Promise<void>
   onDelete: (id: number) => Promise<void>
 }
 
-function OptionPanel({ title, items, loading, onCreate, onUpdate, onDelete }: OptionPanelProps) {
+function OptionPanel({ title, items, loading, onCreate, onUpdate, onReorder, onDelete }: OptionPanelProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [newValue, setNewValue] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const sorted = [...items].sort((a, b) => a.displayOrder - b.displayOrder)
 
   async function handleCreate() {
     if (!newValue.trim()) return
@@ -91,7 +94,7 @@ function OptionPanel({ title, items, loading, onCreate, onUpdate, onDelete }: Op
           <p className="py-10 text-center text-sm text-gray-400">No {title.toLowerCase()} yet.</p>
         ) : (
           <ul className="divide-y divide-gray-100">
-            {items.map((item) => (
+            {sorted.map((item, idx) => (
               <li key={item.id} className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50">
                 {editId === item.id ? (
                   <>
@@ -111,6 +114,22 @@ function OptionPanel({ title, items, loading, onCreate, onUpdate, onDelete }: Op
                   </>
                 ) : (
                   <>
+                    <div className="flex flex-col mr-1">
+                      <button
+                        onClick={() => onReorder(item.id, 'up')}
+                        disabled={idx === 0}
+                        className="rounded p-0.5 text-gray-300 hover:text-gray-600 disabled:opacity-0"
+                      >
+                        <ChevronUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => onReorder(item.id, 'down')}
+                        disabled={idx === sorted.length - 1}
+                        className="rounded p-0.5 text-gray-300 hover:text-gray-600 disabled:opacity-0"
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </div>
                     <span className="flex-1 text-sm text-gray-800">{item.value}</span>
                     <button onClick={() => startEdit(item)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-primary-800">
                       <Pencil className="h-3.5 w-3.5" />
@@ -160,6 +179,50 @@ export function Options() {
     setColors((prev) => prev.map((c) => (c.id === id ? updated : c)))
   }
 
+  async function reorderFabric(id: number, direction: 'up' | 'down') {
+    const sorted = [...fabrics].sort((a, b) => a.displayOrder - b.displayOrder)
+    const idx = sorted.findIndex((f) => f.id === id)
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= sorted.length) return
+    const current = sorted[idx]
+    const neighbor = sorted[swapIdx]
+    const newOrder = neighbor.displayOrder === current.displayOrder ? swapIdx : neighbor.displayOrder
+    const swapOrder = neighbor.displayOrder === current.displayOrder ? idx : current.displayOrder
+    setFabrics((prev) =>
+      prev.map((f) =>
+        f.id === current.id ? { ...f, displayOrder: newOrder }
+        : f.id === neighbor.id ? { ...f, displayOrder: swapOrder }
+        : f
+      )
+    )
+    await Promise.all([
+      optionsApi.reorderFabric(current.id, newOrder),
+      optionsApi.reorderFabric(neighbor.id, swapOrder),
+    ])
+  }
+
+  async function reorderColor(id: number, direction: 'up' | 'down') {
+    const sorted = [...colors].sort((a, b) => a.displayOrder - b.displayOrder)
+    const idx = sorted.findIndex((c) => c.id === id)
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= sorted.length) return
+    const current = sorted[idx]
+    const neighbor = sorted[swapIdx]
+    const newOrder = neighbor.displayOrder === current.displayOrder ? swapIdx : neighbor.displayOrder
+    const swapOrder = neighbor.displayOrder === current.displayOrder ? idx : current.displayOrder
+    setColors((prev) =>
+      prev.map((c) =>
+        c.id === current.id ? { ...c, displayOrder: newOrder }
+        : c.id === neighbor.id ? { ...c, displayOrder: swapOrder }
+        : c
+      )
+    )
+    await Promise.all([
+      optionsApi.reorderColor(current.id, newOrder),
+      optionsApi.reorderColor(neighbor.id, swapOrder),
+    ])
+  }
+
   async function deleteFabric(id: number) {
     await optionsApi.deleteFabric(id)
     setFabrics((prev) => prev.filter((f) => f.id !== id))
@@ -180,6 +243,7 @@ export function Options() {
           loading={loadingFabrics}
           onCreate={createFabric}
           onUpdate={updateFabric}
+          onReorder={reorderFabric}
           onDelete={deleteFabric}
         />
         <OptionPanel
@@ -188,6 +252,7 @@ export function Options() {
           loading={loadingColors}
           onCreate={createColor}
           onUpdate={updateColor}
+          onReorder={reorderColor}
           onDelete={deleteColor}
         />
       </div>

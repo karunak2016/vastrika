@@ -26,6 +26,12 @@ export const optionsApi = {
   updateColor: (id: number, value: string): Promise<ProductOption> =>
     apiClient.post<ProductOption>(`/options/colors/update/${id}`, { value }).then((r) => r.data),
 
+  reorderFabric: (id: number, displayOrder: number): Promise<void> =>
+    apiClient.post(`/options/fabrics/reorder/${id}`, { displayOrder }).then(() => undefined),
+
+  reorderColor: (id: number, displayOrder: number): Promise<void> =>
+    apiClient.post(`/options/colors/reorder/${id}`, { displayOrder }).then(() => undefined),
+
   deleteFabric: (id: number): Promise<void> =>
     apiClient.post(`/options/fabrics/delete/${id}`).then(() => undefined),
 

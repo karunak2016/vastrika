@@ -56,6 +56,22 @@ public class ProductOptionsController : ControllerBase
         return Ok(new { id, type = "Color", value = dto.Value.Trim() });
     }
 
+    [HttpPost("fabrics/reorder/{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ReorderFabric(int id, [FromBody] ReorderDto dto)
+    {
+        await _repo.ReorderAsync(id, dto.DisplayOrder);
+        return Ok();
+    }
+
+    [HttpPost("colors/reorder/{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ReorderColor(int id, [FromBody] ReorderDto dto)
+    {
+        await _repo.ReorderAsync(id, dto.DisplayOrder);
+        return Ok();
+    }
+
     [HttpPost("fabrics/delete/{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteFabric(int id)
@@ -76,4 +92,9 @@ public class ProductOptionsController : ControllerBase
 public class OptionValueDto
 {
     public string Value { get; set; } = string.Empty;
+}
+
+public class ReorderDto
+{
+    public int DisplayOrder { get; set; }
 }
