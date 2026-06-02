@@ -13,7 +13,7 @@ public class ProductRepository : IProductRepository
     public ProductRepository(IDbConnectionFactory db) => _db = db;
 
     public async Task<(List<Product> Items, int Total)> GetFilteredAsync(int page, int pageSize, int? categoryId,
-        decimal? minPrice, decimal? maxPrice, string? color, string? fabric, string? sortBy)
+        decimal? minPrice, decimal? maxPrice, string? color, string? fabric, string? sortBy, string? state = null)
     {
         using var conn = _db.Create();
         var p = new DynamicParameters();
@@ -22,6 +22,7 @@ public class ProductRepository : IProductRepository
         p.Add("@MaxPrice", maxPrice);
         p.Add("@Color", color);
         p.Add("@Fabric", fabric);
+        p.Add("@State", state);
         p.Add("@SortBy", sortBy ?? "newest");
         p.Add("@Page", page);
         p.Add("@PageSize", pageSize);
@@ -69,6 +70,7 @@ public class ProductRepository : IProductRepository
         p.Add("@StockQuantity", product.StockQuantity);
         p.Add("@Fabric", product.Fabric);
         p.Add("@Color", product.Color);
+        p.Add("@State", product.State);
         p.Add("@HasBlousePiece", product.HasBlousePiece);
         p.Add("@CareInstructions", product.CareInstructions);
         p.Add("@DeliveryDays", product.DeliveryDays);
@@ -92,6 +94,7 @@ public class ProductRepository : IProductRepository
             product.StockQuantity,
             product.Fabric,
             product.Color,
+            product.State,
             product.HasBlousePiece,
             product.CareInstructions,
             product.DeliveryDays,

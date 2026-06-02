@@ -46,6 +46,7 @@ export interface Product {
   categoryName: string
   fabric: string
   color: string
+  state?: string
   stockQuantity: number
   isActive: boolean
   images: ProductImage[]
@@ -65,6 +66,7 @@ export interface ProductRequest {
   categoryId: number
   fabric: string
   color: string
+  state?: string
   stockQuantity: number
   hasBlousePiece?: boolean
   careInstructions?: string

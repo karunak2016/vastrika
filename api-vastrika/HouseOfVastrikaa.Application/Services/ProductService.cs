@@ -17,12 +17,12 @@ public class ProductService : IProductService
     }
 
     public async Task<PagedResult<ProductListDto>> GetAllAsync(int page, int pageSize, int? categoryId,
-        decimal? minPrice, decimal? maxPrice, string? color, string? fabric, string? sortBy)
+        decimal? minPrice, decimal? maxPrice, string? color, string? fabric, string? sortBy, string? state = null)
     {
         try
         {
             _logger.LogInformation("GetAll products page={Page} pageSize={PageSize}", page, pageSize);
-            var (items, total) = await _repo.GetFilteredAsync(page, pageSize, categoryId, minPrice, maxPrice, color, fabric, sortBy);
+            var (items, total) = await _repo.GetFilteredAsync(page, pageSize, categoryId, minPrice, maxPrice, color, fabric, sortBy, state);
             return new PagedResult<ProductListDto>
             {
                 Items = items.Select(MapToList).ToList(),
@@ -83,7 +83,8 @@ public class ProductService : IProductService
             {
                 Name = dto.Name, Description = dto.Description, Price = dto.Price,
                 DiscountedPrice = dto.DiscountedPrice, StockQuantity = dto.StockQuantity,
-                Fabric = dto.Fabric, Color = dto.Color, HasBlousePiece = dto.HasBlousePiece,
+                Fabric = dto.Fabric, Color = dto.Color, State = dto.State,
+                HasBlousePiece = dto.HasBlousePiece,
                 CareInstructions = dto.CareInstructions, DeliveryDays = dto.DeliveryDays,
                 CategoryId = dto.CategoryId
             };
@@ -109,7 +110,8 @@ public class ProductService : IProductService
             existing.Name = dto.Name; existing.Description = dto.Description;
             existing.Price = dto.Price; existing.DiscountedPrice = dto.DiscountedPrice;
             existing.StockQuantity = dto.StockQuantity; existing.Fabric = dto.Fabric;
-            existing.Color = dto.Color; existing.HasBlousePiece = dto.HasBlousePiece;
+            existing.Color = dto.Color; existing.State = dto.State;
+            existing.HasBlousePiece = dto.HasBlousePiece;
             existing.CareInstructions = dto.CareInstructions; existing.DeliveryDays = dto.DeliveryDays;
             existing.CategoryId = dto.CategoryId;
 
@@ -173,7 +175,7 @@ public class ProductService : IProductService
     private static ProductListDto MapToList(Product p) => new()
     {
         Id = p.Id, Name = p.Name, Price = p.Price, DiscountedPrice = p.DiscountedPrice,
-        Fabric = p.Fabric ?? string.Empty, Color = p.Color ?? string.Empty,
+        Fabric = p.Fabric ?? string.Empty, Color = p.Color ?? string.Empty, State = p.State,
         CategoryName = p.CategoryName ?? string.Empty,
         DefaultImageUrl = p.DefaultImage,
         StockQuantity = p.StockQuantity,
@@ -194,7 +196,7 @@ public class ProductService : IProductService
             Id = p.Id, Name = p.Name, Description = p.Description ?? string.Empty,
             Price = p.Price, DiscountedPrice = p.DiscountedPrice,
             StockQuantity = p.StockQuantity, Fabric = p.Fabric ?? string.Empty,
-            Color = p.Color ?? string.Empty, HasBlousePiece = p.HasBlousePiece,
+            Color = p.Color ?? string.Empty, State = p.State, HasBlousePiece = p.HasBlousePiece,
             CareInstructions = p.CareInstructions, DeliveryDays = p.DeliveryDays,
             CategoryId = p.CategoryId, CategoryName = p.CategoryName ?? string.Empty,
             IsActive = p.IsActive,
@@ -208,7 +210,7 @@ public class ProductService : IProductService
 public interface IProductRepository
 {
     Task<(List<Product> Items, int Total)> GetFilteredAsync(int page, int pageSize, int? categoryId,
-        decimal? minPrice, decimal? maxPrice, string? color, string? fabric, string? sortBy);
+        decimal? minPrice, decimal? maxPrice, string? color, string? fabric, string? sortBy, string? state = null);
     Task<(List<Product> Items, int Total)> SearchAsync(string query, int page, int pageSize);
     Task<(Product? Product, IEnumerable<ProductImage> Images)> GetByIdWithImagesAsync(int id);
     Task<int> CreateAsync(Product product);

@@ -2,8 +2,18 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Category } from '../../types'
 import { categoriesApi } from '../../api/categories'
+import { settingsApi } from '../../api/settings'
 
 const FABRICS = ['Silk', 'Cotton', 'Linen', 'Chiffon', 'Georgette', 'Crepe']
+
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana',
+  'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+]
+
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
   { value: 'price_asc', label: 'Price: Low to High' },
@@ -16,9 +26,13 @@ export function ProductFilters() {
   const { categoryId, fabric: fabricParam, sortBy: sortByParam } = useParams<{ categoryId?: string; fabric?: string; sortBy?: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const [categories, setCategories] = useState<Category[]>([])
+  const [stateFilterEnabled, setStateFilterEnabled] = useState(false)
 
   useEffect(() => {
     categoriesApi.list().then(setCategories).catch(() => {})
+    settingsApi.get('StateFilterEnabled')
+      .then((s) => setStateFilterEnabled(s.value === 'true'))
+      .catch(() => {})
   }, [])
 
   function buildPath(catId?: number, fab?: string, sort?: string, queryStr?: string) {
@@ -68,8 +82,8 @@ export function ProductFilters() {
   const selectedSort = sortByParam ?? ''
   const minPrice = searchParams.get('minPrice') ?? ''
   const maxPrice = searchParams.get('maxPrice') ?? ''
-  const hasActiveFilters = !!(selectedCategory || selectedFabric || selectedSort || minPrice || maxPrice)
-
+  const selectedState = searchParams.get('state') ?? ''
+  const hasActiveFilters = !!(selectedCategory || selectedFabric || selectedSort || minPrice || maxPrice || selectedState)
 
   return (
     <aside className="w-full space-y-6">
@@ -139,6 +153,33 @@ export function ProductFilters() {
           ))}
         </ul>
       </div>
+
+      {/* State filter — shown only when enabled in settings */}
+      {stateFilterEnabled && (
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-700 mb-2">State</h3>
+          <ul className="space-y-1">
+            <li>
+              <button
+                onClick={() => update('state', undefined)}
+                className={`text-sm ${!selectedState ? 'font-semibold text-primary-800' : 'text-gray-600 hover:text-primary-800'}`}
+              >
+                All
+              </button>
+            </li>
+            {INDIAN_STATES.map((s) => (
+              <li key={s}>
+                <button
+                  onClick={() => update('state', s)}
+                  className={`text-sm ${selectedState === s ? 'font-semibold text-primary-800' : 'text-gray-600 hover:text-primary-800'}`}
+                >
+                  {s}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Price range */}
       <div>

@@ -10,6 +10,7 @@ public class ProductListDto
     public string CategoryName { get; set; } = string.Empty;
     public string Fabric { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;
+    public string? State { get; set; }
     public int StockQuantity { get; set; }
     public bool IsActive { get; set; }
 }

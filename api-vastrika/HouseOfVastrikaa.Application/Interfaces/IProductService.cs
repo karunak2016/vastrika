@@ -5,7 +5,7 @@ namespace HouseOfVastrikaa.Application.Interfaces;
 public interface IProductService
 {
     Task<PagedResult<ProductListDto>> GetAllAsync(int page, int pageSize, int? categoryId,
-        decimal? minPrice, decimal? maxPrice, string? color, string? fabric, string? sortBy);
+        decimal? minPrice, decimal? maxPrice, string? color, string? fabric, string? sortBy, string? state = null);
     Task<ProductDto?> GetByIdAsync(int id);
     Task<PagedResult<ProductListDto>> SearchAsync(string query, int page, int pageSize);
     Task<ProductDto> CreateAsync(CreateProductDto dto);

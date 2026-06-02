@@ -46,6 +46,7 @@ export interface ProductListItem {
   categoryName: string
   fabric: string
   color: string
+  state?: string
 }
 
 export interface Product {
@@ -71,6 +72,7 @@ export interface ProductFilters {
   maxPrice?: number
   color?: string
   fabric?: string
+  state?: string
   sortBy?: string
   page?: number
   pageSize?: number

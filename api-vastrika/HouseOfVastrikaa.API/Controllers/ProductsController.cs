@@ -24,12 +24,12 @@ public class ProductsController : ControllerBase
         [FromQuery] int? categoryId = null,
         [FromQuery] decimal? minPrice = null, [FromQuery] decimal? maxPrice = null,
         [FromQuery] string? color = null, [FromQuery] string? fabric = null,
-        [FromQuery] string? sortBy = null)
+        [FromQuery] string? sortBy = null, [FromQuery] string? state = null)
     {
         try
         {
             _logger.LogInformation("GetAll products page={Page} pageSize={PageSize}", page, pageSize);
-            return Ok(await _products.GetAllAsync(page, pageSize, categoryId, minPrice, maxPrice, color, fabric, sortBy));
+            return Ok(await _products.GetAllAsync(page, pageSize, categoryId, minPrice, maxPrice, color, fabric, sortBy, state));
         }
         catch (Exception ex)
         {

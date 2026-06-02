@@ -9,6 +9,7 @@ public class CreateProductDto
     public int StockQuantity { get; set; }
     public string Fabric { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;
+    public string? State { get; set; }
     public bool HasBlousePiece { get; set; }
     public string? CareInstructions { get; set; }
     public int DeliveryDays { get; set; } = 5;

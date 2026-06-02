@@ -24,6 +24,7 @@ export function Products() {
       minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
       maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
       sortBy: (sortByParam as 'price_asc' | 'price_desc' | 'newest' | 'name') ?? undefined,
+      state: searchParams.get('state') ?? undefined,
     }
 
     const promise = q ? productsApi.search(q) : productsApi.list(filters)

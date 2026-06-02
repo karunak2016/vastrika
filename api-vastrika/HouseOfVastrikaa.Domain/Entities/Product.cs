@@ -10,6 +10,7 @@ public class Product
     public int StockQuantity { get; set; }
     public string? Fabric { get; set; }
     public string? Color { get; set; }
+    public string? State { get; set; }
     public bool HasBlousePiece { get; set; }
     public string? CareInstructions { get; set; }
     public int DeliveryDays { get; set; } = 7;

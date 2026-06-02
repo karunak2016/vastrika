@@ -10,7 +10,15 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Spinner } from '../components/ui/Spinner'
 
-const empty: ProductRequest = { name: '', description: '', price: 0, categoryId: 0, fabric: '', color: '', stockQuantity: 0 }
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana',
+  'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+]
+
+const empty: ProductRequest = { name: '', description: '', price: 0, categoryId: 0, fabric: '', color: '', stockQuantity: 0, state: '' }
 
 export function ProductForm() {
   const { id } = useParams<{ id: string }>()
@@ -36,7 +44,7 @@ export function ProductForm() {
     optionsApi.getColors().then(setColors).catch(() => {})
     if (isEdit && id) {
       productsApi.getById(Number(id)).then((p) => {
-        setForm({ name: p.name, description: p.description, price: p.price, categoryId: p.categoryId, fabric: p.fabric, color: p.color, stockQuantity: p.stockQuantity })
+        setForm({ name: p.name, description: p.description, price: p.price, categoryId: p.categoryId, fabric: p.fabric, color: p.color, state: p.state ?? '', stockQuantity: p.stockQuantity })
         setImages(p.images ?? (p.imageUrls ?? []).map((url, i) => ({ id: -(i + 1), url, isDefault: url === p.defaultImageUrl || i === 0 })))
       }).finally(() => setLoading(false))
     }
@@ -189,6 +197,20 @@ export function ProductForm() {
             </select>
           </div>
           <Input id="stockQuantity" type="number" label="Stock" placeholder="10" value={form.stockQuantity || ''} onChange={field('stockQuantity')} min={0} />
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">State <span className="text-gray-400 normal-case font-normal">(optional)</span></label>
+          <select
+            value={form.state ?? ''}
+            onChange={field('state')}
+            className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-800 focus:outline-none"
+          >
+            <option value="">No specific state</option>
+            {INDIAN_STATES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
         </div>
       </div>
 
