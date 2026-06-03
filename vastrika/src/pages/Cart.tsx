@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
 import { cartApi } from '../api/cart'
+import { couponsApi, type BankOffer } from '../api/coupons'
 import { useCartStore } from '../stores/cartStore'
 import { useAuthStore } from '../stores/authStore'
 import { Button } from '../components/ui/Button'
@@ -11,8 +12,10 @@ export function Cart() {
   const { cart, setCart, itemCount } = useCartStore()
   const { isAuthenticated } = useAuthStore()
   const [loading, setLoading] = useState(true)
+  const [bankOffers, setBankOffers] = useState<BankOffer[]>([])
 
   useEffect(() => {
+    couponsApi.getBankOffers().then(setBankOffers).catch(() => {})
     if (!isAuthenticated) { setLoading(false); return }
     cartApi.get().then(setCart).finally(() => setLoading(false))
   }, [isAuthenticated, setCart])
@@ -106,6 +109,20 @@ export function Cart() {
             <span>Total</span>
             <span>₹{(cart.total + (cart.total >= 1999 ? 0 : 99)).toLocaleString('en-IN')}</span>
           </div>
+          {bankOffers.length > 0 && (
+            <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-3 space-y-2">
+              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Bank Card Offers</p>
+              {bankOffers.map((offer) => (
+                <p key={offer.id} className="text-xs text-blue-800">
+                  <span className="font-semibold">{offer.bankName}:</span>{' '}
+                  {offer.description}
+                  {offer.code && (
+                    <> — <span className="font-mono font-bold bg-blue-100 px-1 rounded">{offer.code}</span></>
+                  )}
+                </p>
+              ))}
+            </div>
+          )}
           <Link to="/checkout" className="block mt-5">
             <Button className="w-full" size="lg">Proceed to Checkout</Button>
           </Link>

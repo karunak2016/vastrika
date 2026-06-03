@@ -41,6 +41,21 @@ public class CouponController(ICouponService coupons, ILogger<CouponController> 
         }
     }
 
+    [HttpGet("bank-offers")]
+    public async Task<IActionResult> GetBankOffers()
+    {
+        try
+        {
+            var offers = await coupons.GetBankOffersAsync();
+            return Ok(offers);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Get bank offers failed");
+            throw;
+        }
+    }
+
     // ── Admin endpoints ───────────────────────────────────────────────────────
 
     [HttpGet]

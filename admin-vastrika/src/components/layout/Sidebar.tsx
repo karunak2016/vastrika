@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Package, Tag, ShoppingCart, Users, X, Ticket, Sliders, Settings,
+  LayoutDashboard, Package, Tag, ShoppingCart, Users, X, Ticket, Sliders, Settings, Megaphone,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 
@@ -12,6 +12,7 @@ const links = [
   { to: '/customers',  label: 'Customers',  icon: Users },
   { to: '/coupons',    label: 'Coupons',    icon: Ticket },
   { to: '/options',    label: 'Options',    icon: Sliders },
+  { to: '/campaigns',  label: 'Campaigns',  icon: Megaphone },
   { to: '/settings',  label: 'Settings',   icon: Settings },
 ]
 

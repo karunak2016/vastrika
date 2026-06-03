@@ -174,6 +174,7 @@ export interface Coupon {
   usageLimit: number | null
   usedCount: number
   festivalName: string | null
+  bankName: string | null
   createdAt: string
 }
 
@@ -188,4 +189,30 @@ export interface CreateCouponPayload {
   endDate?: string
   usageLimit?: number
   festivalName?: string
+  bankName?: string
+}
+
+// ─── Campaigns ────────────────────────────────────────────────────────────────
+
+export interface Campaign {
+  id: number
+  name: string
+  description?: string
+  categoryId: number | null
+  discountType: 'Percentage' | 'Fixed'
+  discountValue: number
+  startDate: string | null
+  endDate: string | null
+  isActive: boolean
+  createdAt: string
+}
+
+export interface CreateCampaignPayload {
+  name: string
+  description?: string
+  categoryId?: number
+  discountType: 'Percentage' | 'Fixed'
+  discountValue: number
+  startDate?: string
+  endDate?: string
 }

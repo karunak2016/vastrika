@@ -19,6 +19,12 @@ public class CouponService(ICouponRepository repo, ILogger<CouponService> logger
         return offers.Select(Map).ToList();
     }
 
+    public async Task<List<CouponDto>> GetBankOffersAsync()
+    {
+        var offers = await repo.GetBankOffersAsync();
+        return offers.Select(Map).ToList();
+    }
+
     public async Task<CouponValidationResult> ValidateAsync(string code, decimal cartTotal)
     {
         try
@@ -73,6 +79,7 @@ public class CouponService(ICouponRepository repo, ILogger<CouponService> logger
             EndDate      = dto.EndDate,
             UsageLimit   = dto.UsageLimit,
             FestivalName = dto.FestivalName,
+            BankName     = string.IsNullOrWhiteSpace(dto.BankName) ? null : dto.BankName.Trim(),
         };
         coupon.Id = await repo.CreateAsync(coupon);
         logger.LogInformation("Coupon {Code} created with Id {Id}", coupon.Code, coupon.Id);
@@ -94,6 +101,7 @@ public class CouponService(ICouponRepository repo, ILogger<CouponService> logger
             EndDate      = dto.EndDate,
             UsageLimit   = dto.UsageLimit,
             FestivalName = dto.FestivalName,
+            BankName     = string.IsNullOrWhiteSpace(dto.BankName) ? null : dto.BankName.Trim(),
             IsActive     = isActive,
         };
         await repo.UpdateAsync(coupon);
@@ -128,7 +136,7 @@ public class CouponService(ICouponRepository repo, ILogger<CouponService> logger
         MinCartAmount = c.MinCartAmount, MaxDiscount = c.MaxDiscount,
         StartDate = c.StartDate, EndDate = c.EndDate,
         IsActive = c.IsActive, UsageLimit = c.UsageLimit,
-        UsedCount = c.UsedCount, FestivalName = c.FestivalName,
+        UsedCount = c.UsedCount, FestivalName = c.FestivalName, BankName = c.BankName,
         CreatedAt = c.CreatedAt
     };
 }

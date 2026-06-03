@@ -43,6 +43,7 @@ public class CouponRepository(IDbConnectionFactory db) : ICouponRepository
         p.Add("@EndDate",       coupon.EndDate);
         p.Add("@UsageLimit",    coupon.UsageLimit);
         p.Add("@FestivalName",  coupon.FestivalName);
+        p.Add("@BankName",      coupon.BankName);
         p.Add("@NewCouponId",   dbType: DbType.Int32, direction: ParameterDirection.Output);
 
         await conn.ExecuteAsync("sp_Coupons_Create", p, commandType: CommandType.StoredProcedure);
@@ -57,8 +58,15 @@ public class CouponRepository(IDbConnectionFactory db) : ICouponRepository
             coupon.Id, coupon.Code, coupon.Description, coupon.DiscountType,
             coupon.DiscountValue, coupon.MinCartAmount, coupon.MaxDiscount,
             coupon.StartDate, coupon.EndDate, coupon.UsageLimit,
-            coupon.FestivalName, coupon.IsActive
+            coupon.FestivalName, coupon.BankName, coupon.IsActive
         }, commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task<List<Coupon>> GetBankOffersAsync()
+    {
+        using var conn = db.Create();
+        var rows = await conn.QueryAsync<Coupon>("sp_Coupons_GetBankOffers", commandType: CommandType.StoredProcedure);
+        return rows.ToList();
     }
 
     public async Task IncrementUsageAsync(int id)

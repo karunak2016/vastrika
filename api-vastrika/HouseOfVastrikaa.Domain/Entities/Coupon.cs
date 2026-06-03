@@ -15,5 +15,6 @@ public class Coupon
     public int? UsageLimit { get; set; }
     public int UsedCount { get; set; }
     public string? FestivalName { get; set; }
+    public string? BankName { get; set; }
     public DateTime CreatedAt { get; set; }
 }

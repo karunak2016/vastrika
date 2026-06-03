@@ -6,6 +6,7 @@ import { productsApi } from '../api/products'
 import { cartApi } from '../api/cart'
 import { wishlistApi } from '../api/wishlist'
 import { shippingApi } from '../api/shipping'
+import { couponsApi, type BankOffer } from '../api/coupons'
 import { useCartStore } from '../stores/cartStore'
 import { useWishlistStore } from '../stores/wishlistStore'
 import { useAuthStore } from '../stores/authStore'
@@ -21,6 +22,7 @@ export function ProductDetail() {
   const [quantity, setQuantity] = useState(1)
   const [pincode, setPincode] = useState('')
   const [serviceMsg, setServiceMsg] = useState('')
+  const [bankOffers, setBankOffers] = useState<BankOffer[]>([])
 
   const { setCart, openDrawer } = useCartStore()
   const { isWishlisted, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore()
@@ -32,6 +34,7 @@ export function ProductDetail() {
     productsApi.getById(Number(id))
       .then(setProduct)
       .finally(() => setLoading(false))
+    couponsApi.getBankOffers().then(setBankOffers).catch(() => {})
   }, [id])
 
   if (loading) {
@@ -195,6 +198,25 @@ export function ProductDetail() {
               </Link>
             )}
           </div>
+
+          {/* Bank card offers */}
+          {bankOffers.length > 0 && (
+            <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 space-y-2">
+              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Bank Card Offers</p>
+              {bankOffers.map((offer) => (
+                <div key={offer.id} className="flex items-start gap-2 text-sm text-blue-800">
+                  <span className="text-base leading-none mt-0.5">🏦</span>
+                  <span>
+                    <span className="font-semibold">{offer.bankName} Card:</span>{' '}
+                    {offer.description}
+                    {offer.code && (
+                      <> — Use code <span className="font-mono font-bold bg-blue-100 px-1 rounded">{offer.code}</span></>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Pincode check */}
           <div className="rounded-lg border border-gray-100 p-4">

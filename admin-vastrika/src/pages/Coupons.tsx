@@ -11,7 +11,7 @@ const EMPTY_FORM: CreateCouponPayload & { isActive: boolean } = {
   code: '', description: '', discountType: 'Percentage', discountValue: 0,
   minCartAmount: undefined, maxDiscount: undefined,
   startDate: '', endDate: '', usageLimit: undefined,
-  festivalName: '', isActive: true,
+  festivalName: '', bankName: '', isActive: true,
 }
 
 export function Coupons() {
@@ -47,6 +47,7 @@ export function Coupons() {
       endDate: c.endDate ? c.endDate.slice(0, 10) : '',
       usageLimit: c.usageLimit ?? undefined,
       festivalName: c.festivalName ?? '',
+      bankName: c.bankName ?? '',
       isActive: c.isActive,
     })
     setError('')
@@ -136,6 +137,11 @@ export function Coupons() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {c.festivalName && <span className="text-base" title={c.festivalName}>🪔</span>}
+                        {c.bankName && (
+                          <span className="inline-flex items-center rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 uppercase tracking-wide">
+                            🏦 {c.bankName}
+                          </span>
+                        )}
                         <div>
                           {c.code
                             ? <span className="font-mono font-semibold text-primary-800">{c.code}</span>
@@ -232,11 +238,19 @@ export function Coupons() {
               <Input label="Description" value={form.description}
                 onChange={field('description')} placeholder="e.g. Diwali Special — 20% off" />
 
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Festival Name <span className="text-gray-400">(optional)</span></label>
-                <input type="text" placeholder="e.g. Diwali, Navratri" value={form.festivalName}
-                  onChange={field('festivalName')}
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-800 focus:outline-none" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Festival Name <span className="text-gray-400">(optional)</span></label>
+                  <input type="text" placeholder="e.g. Diwali, Navratri" value={form.festivalName}
+                    onChange={field('festivalName')}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-800 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Bank Name <span className="text-gray-400">(optional)</span></label>
+                  <input type="text" placeholder="e.g. HDFC, SBI, Axis" value={form.bankName ?? ''}
+                    onChange={field('bankName')}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-800 focus:outline-none" />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

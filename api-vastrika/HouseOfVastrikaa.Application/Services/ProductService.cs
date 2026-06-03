@@ -1,6 +1,7 @@
 using HouseOfVastrikaa.Application.DTOs.Product;
 using HouseOfVastrikaa.Application.Interfaces;
 using HouseOfVastrikaa.Domain.Entities;
+using Campaign = HouseOfVastrikaa.Domain.Entities.Campaign;
 using Microsoft.Extensions.Logging;
 
 namespace HouseOfVastrikaa.Application.Services;
@@ -8,11 +9,13 @@ namespace HouseOfVastrikaa.Application.Services;
 public class ProductService : IProductService
 {
     private readonly IProductRepository _repo;
+    private readonly ICampaignRepository _campaigns;
     private readonly ILogger<ProductService> _logger;
 
-    public ProductService(IProductRepository repo, ILogger<ProductService> logger)
+    public ProductService(IProductRepository repo, ICampaignRepository campaigns, ILogger<ProductService> logger)
     {
         _repo = repo;
+        _campaigns = campaigns;
         _logger = logger;
     }
 
@@ -23,9 +26,10 @@ public class ProductService : IProductService
         {
             _logger.LogInformation("GetAll products page={Page} pageSize={PageSize}", page, pageSize);
             var (items, total) = await _repo.GetFilteredAsync(page, pageSize, categoryId, minPrice, maxPrice, color, fabric, sortBy, state);
+            var activeCampaigns = await _campaigns.GetActiveCampaignsAsync();
             return new PagedResult<ProductListDto>
             {
-                Items = items.Select(MapToList).ToList(),
+                Items = items.Select(p => MapToList(p, activeCampaigns)).ToList(),
                 TotalCount = total,
                 Page = page,
                 PageSize = pageSize
@@ -44,7 +48,9 @@ public class ProductService : IProductService
         {
             _logger.LogInformation("GetById product {Id}", id);
             var (product, images) = await _repo.GetByIdWithImagesAsync(id);
-            return product == null ? null : MapToDto(product, images);
+            if (product == null) return null;
+            var activeCampaigns = await _campaigns.GetActiveCampaignsAsync();
+            return MapToDto(product, images, activeCampaigns);
         }
         catch (Exception ex)
         {
@@ -59,9 +65,10 @@ public class ProductService : IProductService
         {
             _logger.LogInformation("Search products query={Query}", query);
             var (items, total) = await _repo.SearchAsync(query, page, pageSize);
+            var activeCampaigns = await _campaigns.GetActiveCampaignsAsync();
             return new PagedResult<ProductListDto>
             {
-                Items = items.Select(MapToList).ToList(),
+                Items = items.Select(p => MapToList(p, activeCampaigns)).ToList(),
                 TotalCount = total,
                 Page = page,
                 PageSize = pageSize
@@ -172,9 +179,30 @@ public class ProductService : IProductService
         }
     }
 
-    private static ProductListDto MapToList(Product p) => new()
+    private static decimal? ApplyCampaign(Product p, IList<Campaign> campaigns)
     {
-        Id = p.Id, Name = p.Name, Price = p.Price, DiscountedPrice = p.DiscountedPrice,
+        var best = campaigns
+            .Where(c => c.CategoryId == null || c.CategoryId == p.CategoryId)
+            .Select(c => c.DiscountType == "Percentage"
+                ? p.Price * c.DiscountValue / 100m
+                : c.DiscountValue)
+            .DefaultIfEmpty(0m)
+            .Max();
+        return best > 0 ? Math.Round(p.Price - best, 2) : null;
+    }
+
+    private static decimal? EffectiveDiscountedPrice(Product p, IList<Campaign> campaigns)
+    {
+        var campaignPrice = ApplyCampaign(p, campaigns);
+        if (campaignPrice == null) return p.DiscountedPrice;
+        if (p.DiscountedPrice == null) return campaignPrice;
+        return Math.Min(campaignPrice.Value, p.DiscountedPrice.Value);
+    }
+
+    private static ProductListDto MapToList(Product p, IList<Campaign>? campaigns = null) => new()
+    {
+        Id = p.Id, Name = p.Name, Price = p.Price,
+        DiscountedPrice = campaigns != null ? EffectiveDiscountedPrice(p, campaigns) : p.DiscountedPrice,
         Fabric = p.Fabric ?? string.Empty, Color = p.Color ?? string.Empty, State = p.State,
         CategoryName = p.CategoryName ?? string.Empty,
         DefaultImageUrl = p.DefaultImage,
@@ -182,7 +210,7 @@ public class ProductService : IProductService
         IsActive = p.IsActive
     };
 
-    private static ProductDto MapToDto(Product p, IEnumerable<ProductImage> images)
+    private static ProductDto MapToDto(Product p, IEnumerable<ProductImage> images, IList<Campaign>? campaigns = null)
     {
         var imgList = images.OrderBy(i => i.DisplayOrder).ToList();
         var imageDtos = imgList.Select(i => new ProductImageDto
@@ -194,7 +222,8 @@ public class ProductService : IProductService
         return new ProductDto
         {
             Id = p.Id, Name = p.Name, Description = p.Description ?? string.Empty,
-            Price = p.Price, DiscountedPrice = p.DiscountedPrice,
+            Price = p.Price,
+            DiscountedPrice = campaigns != null ? EffectiveDiscountedPrice(p, campaigns) : p.DiscountedPrice,
             StockQuantity = p.StockQuantity, Fabric = p.Fabric ?? string.Empty,
             Color = p.Color ?? string.Empty, State = p.State, HasBlousePiece = p.HasBlousePiece,
             CareInstructions = p.CareInstructions, DeliveryDays = p.DeliveryDays,

@@ -15,6 +15,7 @@ public class CouponDto
     public int? UsageLimit { get; set; }
     public int UsedCount { get; set; }
     public string? FestivalName { get; set; }
+    public string? BankName { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 
@@ -30,6 +31,7 @@ public class CreateCouponDto
     public DateTime? EndDate { get; set; }
     public int? UsageLimit { get; set; }
     public string? FestivalName { get; set; }
+    public string? BankName { get; set; }
 }
 
 public class ValidateCouponDto
