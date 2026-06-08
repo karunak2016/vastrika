@@ -35,9 +35,11 @@ export function ProductFilters() {
       .catch(() => {})
   }, [])
 
+  const toSlug = (s: string) => s.replace(/\s+/g, '-')
+
   function buildPath(catSlug?: string, fab?: string, sort?: string, queryStr?: string) {
     let path = '/products'
-    if (catSlug) path += `/category/${encodeURIComponent(catSlug)}`
+    if (catSlug) path += `/category/${catSlug}`
     if (fab)     path += `/fabric/${fab}`
     if (sort)    path += `/sortBy/${sort}`
     return queryStr ? `${path}?${queryStr}` : path
@@ -117,8 +119,8 @@ export function ProductFilters() {
             {categories.map((c) => (
               <li key={c.id}>
                 <button
-                  onClick={() => selectCategory(c.name)}
-                  className={`text-sm ${selectedCategory === c.name ? 'font-semibold text-primary-800' : 'text-gray-600 hover:text-primary-800'}`}
+                  onClick={() => selectCategory(toSlug(c.name))}
+                  className={`text-sm ${selectedCategory === toSlug(c.name) ? 'font-semibold text-primary-800' : 'text-gray-600 hover:text-primary-800'}`}
                 >
                   {c.name}
                 </button>

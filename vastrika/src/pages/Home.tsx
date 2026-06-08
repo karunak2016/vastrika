@@ -64,7 +64,7 @@ export function Home() {
             {categories.filter((c) => c.isActive).map((cat) => (
               <Link
                 key={cat.id}
-                to={`/products/category/${encodeURIComponent(cat.name)}`}
+                to={`/products/category/${cat.name.replace(/\s+/g, '-')}`}
                 className="flex-shrink-0 rounded-full border border-primary-200 bg-cream-50 px-5 py-2 text-sm font-medium text-primary-800 hover:bg-primary-800 hover:text-white transition-colors"
               >
                 {cat.name}

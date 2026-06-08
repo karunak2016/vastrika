@@ -24,7 +24,7 @@ export function Products() {
       let categoryId: number | undefined
       if (categorySlug) {
         const cats = await categoriesApi.list().catch(() => [])
-        categoryId = cats.find((c) => c.name === categorySlug)?.id
+        categoryId = cats.find((c) => c.name.replace(/\s+/g, '-') === categorySlug)?.id
       }
 
       const filters = {
