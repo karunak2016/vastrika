@@ -3,12 +3,13 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal, X } from 'lucide-react'
 import type { ProductListItem } from '../types'
 import { productsApi } from '../api/products'
+import { categoriesApi } from '../api/categories'
 import { ProductCard } from '../components/product/ProductCard'
 import { ProductFilters } from '../components/product/ProductFilters'
 import { Spinner } from '../components/ui/Spinner'
 
 export function Products() {
-  const { categoryId, fabric: fabricParam, sortBy: sortByParam } = useParams<{ categoryId?: string; fabric?: string; sortBy?: string }>()
+  const { categorySlug, fabric: fabricParam, sortBy: sortByParam } = useParams<{ categorySlug?: string; fabric?: string; sortBy?: string }>()
   const [searchParams] = useSearchParams()
   const [products, setProducts] = useState<ProductListItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -18,21 +19,32 @@ export function Products() {
 
   useEffect(() => {
     setLoading(true)
-    const filters = {
-      categoryId: categoryId ? Number(categoryId) : undefined,
-      fabric: fabricParam ?? undefined,
-      minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
-      maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
-      sortBy: (sortByParam as 'price_asc' | 'price_desc' | 'newest' | 'name') ?? undefined,
-      state: searchParams.get('state') ?? undefined,
+
+    async function load() {
+      let categoryId: number | undefined
+      if (categorySlug) {
+        const cats = await categoriesApi.list().catch(() => [])
+        categoryId = cats.find((c) => c.name === categorySlug)?.id
+      }
+
+      const filters = {
+        categoryId,
+        fabric: fabricParam ?? undefined,
+        minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
+        maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+        sortBy: (sortByParam as 'price_asc' | 'price_desc' | 'newest' | 'name') ?? undefined,
+        state: searchParams.get('state') ?? undefined,
+      }
+
+      const result = await (q ? productsApi.search(q) : productsApi.list(filters))
+      return result.items
     }
 
-    const promise = q ? productsApi.search(q) : productsApi.list(filters)
-    promise
-      .then((r) => setProducts(r.items))
+    load()
+      .then(setProducts)
       .catch(() => setProducts([]))
       .finally(() => setLoading(false))
-  }, [categoryId, fabricParam, sortByParam, searchParams, q])
+  }, [categorySlug, fabricParam, sortByParam, searchParams, q])
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

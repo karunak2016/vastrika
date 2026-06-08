@@ -43,10 +43,10 @@ export default function App() {
             <Route path="products/sortBy/:sortBy" element={<Products />} />
             <Route path="products/fabric/:fabric" element={<Products />} />
             <Route path="products/fabric/:fabric/sortBy/:sortBy" element={<Products />} />
-            <Route path="products/category/:categoryId" element={<Products />} />
-            <Route path="products/category/:categoryId/sortBy/:sortBy" element={<Products />} />
-            <Route path="products/category/:categoryId/fabric/:fabric" element={<Products />} />
-            <Route path="products/category/:categoryId/fabric/:fabric/sortBy/:sortBy" element={<Products />} />
+            <Route path="products/category/:categorySlug" element={<Products />} />
+            <Route path="products/category/:categorySlug/sortBy/:sortBy" element={<Products />} />
+            <Route path="products/category/:categorySlug/fabric/:fabric" element={<Products />} />
+            <Route path="products/category/:categorySlug/fabric/:fabric/sortBy/:sortBy" element={<Products />} />
             <Route path="products/:id" element={<ProductDetail />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />

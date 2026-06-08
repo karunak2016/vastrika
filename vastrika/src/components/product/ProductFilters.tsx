@@ -23,7 +23,7 @@ const SORT_OPTIONS = [
 
 export function ProductFilters() {
   const navigate = useNavigate()
-  const { categoryId, fabric: fabricParam, sortBy: sortByParam } = useParams<{ categoryId?: string; fabric?: string; sortBy?: string }>()
+  const { categorySlug, fabric: fabricParam, sortBy: sortByParam } = useParams<{ categorySlug?: string; fabric?: string; sortBy?: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const [categories, setCategories] = useState<Category[]>([])
   const [stateFilterEnabled, setStateFilterEnabled] = useState(false)
@@ -35,11 +35,11 @@ export function ProductFilters() {
       .catch(() => {})
   }, [])
 
-  function buildPath(catId?: number, fab?: string, sort?: string, queryStr?: string) {
+  function buildPath(catSlug?: string, fab?: string, sort?: string, queryStr?: string) {
     let path = '/products'
-    if (catId) path += `/category/${catId}`
-    if (fab)   path += `/fabric/${fab}`
-    if (sort)  path += `/sortBy/${sort}`
+    if (catSlug) path += `/category/${encodeURIComponent(catSlug)}`
+    if (fab)     path += `/fabric/${fab}`
+    if (sort)    path += `/sortBy/${sort}`
     return queryStr ? `${path}?${queryStr}` : path
   }
 
@@ -50,18 +50,16 @@ export function ProductFilters() {
     return p.toString()
   }
 
-  const catId = categoryId ? Number(categoryId) : undefined
-
-  function selectCategory(id?: number) {
-    navigate(buildPath(id, fabricParam, sortByParam, qs()))
+  function selectCategory(name?: string) {
+    navigate(buildPath(name, fabricParam, sortByParam, qs()))
   }
 
   function selectFabric(fab?: string) {
-    navigate(buildPath(catId, fab, sortByParam, qs()))
+    navigate(buildPath(categorySlug, fab, sortByParam, qs()))
   }
 
   function selectSort(sort?: string) {
-    navigate(buildPath(catId, fabricParam, sort, qs()))
+    navigate(buildPath(categorySlug, fabricParam, sort, qs()))
   }
 
   function update(key: string, value: string | undefined) {
@@ -78,7 +76,7 @@ export function ProductFilters() {
     navigate('/products')
   }
 
-  const selectedCategory = categoryId ?? ''
+  const selectedCategory = categorySlug ?? ''
   const selectedFabric = fabricParam ?? ''
   const selectedSort = sortByParam ?? ''
   const minPrice = searchParams.get('minPrice') ?? ''
@@ -119,8 +117,8 @@ export function ProductFilters() {
             {categories.map((c) => (
               <li key={c.id}>
                 <button
-                  onClick={() => selectCategory(c.id)}
-                  className={`text-sm ${selectedCategory === String(c.id) ? 'font-semibold text-primary-800' : 'text-gray-600 hover:text-primary-800'}`}
+                  onClick={() => selectCategory(c.name)}
+                  className={`text-sm ${selectedCategory === c.name ? 'font-semibold text-primary-800' : 'text-gray-600 hover:text-primary-800'}`}
                 >
                   {c.name}
                 </button>
