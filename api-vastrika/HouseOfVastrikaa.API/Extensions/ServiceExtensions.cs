@@ -1,6 +1,8 @@
 using System.Text;
+using FirebaseAdmin;
+using FirebaseAdmin.Auth;
+using Google.Apis.Auth.OAuth2;
 using HouseOfVastrikaa.Application.Interfaces;
-using Microsoft.Extensions.Caching.Memory;
 using HouseOfVastrikaa.Application.Services;
 using HouseOfVastrikaa.Domain.Entities;
 using HouseOfVastrikaa.Infrastructure.Data;
@@ -84,8 +86,13 @@ public static class ServiceExtensions
         services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<ICouponService, CouponService>();
 
-        services.AddMemoryCache();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+        // Switch to Msg91SmsService when SMS subscription is ready:
+        // services.AddHttpClient<ISmsService, Msg91SmsService>();
+        services.AddScoped<ISmsService, MockSmsService>();
+
+        // Initialize Firebase once at startup
+        InitializeFirebase(services.BuildServiceProvider().GetRequiredService<IConfiguration>());
 
         services.AddScoped<IAuthService>(sp =>
         {
@@ -93,14 +100,28 @@ public static class ServiceExtensions
             var hasher = sp.GetRequiredService<IPasswordHasher<User>>();
             var repo = sp.GetRequiredService<UserRepository>();
             var logger = sp.GetRequiredService<ILogger<AuthService>>();
-            var cache = sp.GetRequiredService<IMemoryCache>();
+            var sms = sp.GetRequiredService<ISmsService>();
             return new AuthService(
-                config, hasher, logger, cache,
+                config, hasher, logger, sms,
+                async idToken =>
+                {
+                    var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+                    decoded.Claims.TryGetValue("phone_number", out var phone);
+                    return phone?.ToString();
+                },
                 () => Task.FromResult(new List<User>()),
                 repo.GetByEmailAsync,
                 async u => { await repo.CreateAsync(u); });
         });
 
         return services;
+    }
+
+    private static void InitializeFirebase(IConfiguration config)
+    {
+        if (FirebaseApp.DefaultInstance != null) return;
+        var projectId = config["Firebase:ProjectId"];
+        if (string.IsNullOrEmpty(projectId)) return;
+        FirebaseApp.Create(new AppOptions { ProjectId = projectId });
     }
 }

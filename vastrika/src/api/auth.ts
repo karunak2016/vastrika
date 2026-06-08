@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { AuthResponse, LoginRequest, RegisterRequest, OtpSendRequest, OtpVerifyRequest } from '../types'
+import type { AuthResponse, LoginRequest, RegisterRequest, OtpSendRequest, OtpVerifyRequest, FirebaseLoginRequest } from '../types'
 
 export const authApi = {
   register: (data: RegisterRequest) =>
@@ -13,4 +13,7 @@ export const authApi = {
 
   verifyOtp: (data: OtpVerifyRequest) =>
     apiClient.post<AuthResponse>('/auth/otp/verify', data).then((r) => r.data),
+
+  loginWithFirebase: (data: FirebaseLoginRequest) =>
+    apiClient.post<AuthResponse>('/auth/firebase', data).then((r) => r.data),
 }

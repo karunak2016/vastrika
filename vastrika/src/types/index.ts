@@ -35,6 +35,10 @@ export interface OtpVerifyRequest {
   otp: string
 }
 
+export interface FirebaseLoginRequest {
+  idToken: string
+}
+
 // ─── Category ────────────────────────────────────────────────────────────────
 
 export interface Category {

@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth'
+import { auth } from '../lib/firebase'
 import { authApi } from '../api/auth'
 import { useAuthStore } from '../stores/authStore'
 import { Input } from '../components/ui/Input'
@@ -18,12 +20,14 @@ export function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // OTP flow
+  // OTP flow (Firebase)
   const [otpPhone, setOtpPhone] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [otpStep, setOtpStep] = useState<'phone' | 'verify'>('phone')
   const [otpError, setOtpError] = useState('')
   const [otpLoading, setOtpLoading] = useState(false)
+  const recaptchaRef = useRef<RecaptchaVerifier | null>(null)
+  const confirmRef = useRef<ConfirmationResult | null>(null)
 
   function field(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -51,10 +55,15 @@ export function Register() {
     if (!/^\d{10}$/.test(otpPhone)) { setOtpError('Enter a valid 10-digit mobile number.'); return }
     setOtpLoading(true)
     try {
-      await authApi.sendOtp({ phone: otpPhone })
+      if (!recaptchaRef.current) {
+        recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
+      }
+      confirmRef.current = await signInWithPhoneNumber(auth, `+91${otpPhone}`, recaptchaRef.current)
       setOtpStep('verify')
     } catch {
-      setOtpError('Failed to send OTP. Please try again.')
+      recaptchaRef.current?.clear()
+      recaptchaRef.current = null
+      setOtpError('Failed to send OTP. Check your number and try again.')
     } finally {
       setOtpLoading(false)
     }
@@ -65,11 +74,13 @@ export function Register() {
     setOtpError('')
     setOtpLoading(true)
     try {
-      const res = await authApi.verifyOtp({ phone: otpPhone, otp: otpCode })
+      const result = await confirmRef.current!.confirm(otpCode)
+      const idToken = await result.user.getIdToken()
+      const res = await authApi.loginWithFirebase({ idToken })
       setAuth({ name: res.name, email: res.email, role: res.role }, res.token)
       navigate('/')
     } catch {
-      setOtpError('Invalid or expired OTP.')
+      setOtpError('Invalid OTP. Please try again.')
     } finally {
       setOtpLoading(false)
     }
@@ -212,6 +223,7 @@ export function Register() {
           <Link to="/login" className="font-medium text-primary-800 hover:underline">Sign in</Link>
         </p>
       </div>
+      <div id="recaptcha-container" />
     </div>
   )
 }

@@ -10,4 +10,5 @@ public interface IAuthService
     Task<AuthResponseDto> RefreshTokenAsync(string token);
     Task SendOtpAsync(OtpSendRequestDto dto);
     Task<AuthResponseDto> VerifyOtpAsync(OtpVerifyRequestDto dto);
+    Task<AuthResponseDto> LoginWithFirebaseAsync(FirebaseLoginRequestDto dto);
 }

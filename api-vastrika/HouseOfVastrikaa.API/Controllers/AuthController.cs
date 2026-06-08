@@ -67,6 +67,13 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("firebase")]
+    public async Task<IActionResult> FirebaseLogin(FirebaseLoginRequestDto dto)
+    {
+        var result = await _auth.LoginWithFirebaseAsync(dto);
+        return Ok(result);
+    }
+
     [HttpPost("otp/send")]
     public async Task<IActionResult> SendOtp(OtpSendRequestDto dto)
     {
