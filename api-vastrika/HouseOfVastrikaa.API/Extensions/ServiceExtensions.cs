@@ -1,7 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using FirebaseAdmin;
-using FirebaseAdmin.Auth;
-using Google.Apis.Auth.OAuth2;
+using System.Text.Json;
 using HouseOfVastrikaa.Application.Interfaces;
 using HouseOfVastrikaa.Application.Services;
 using HouseOfVastrikaa.Domain.Entities;
@@ -9,7 +9,6 @@ using HouseOfVastrikaa.Infrastructure.Data;
 using HouseOfVastrikaa.Infrastructure.ExternalServices;
 using HouseOfVastrikaa.Infrastructure.Repositories;
 using HouseOfVastrikaa.Infrastructure.Services;
-using HouseOfVastrikaa.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +17,11 @@ namespace HouseOfVastrikaa.API.Extensions;
 
 public static class ServiceExtensions
 {
+    // Cache Google's public certs (refreshed every hour)
+    private static Dictionary<string, X509Certificate2>? _googleCerts;
+    private static DateTime _certsExpiry = DateTime.MinValue;
+    private static readonly SemaphoreSlim _certLock = new(1, 1);
+
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
         var jwt = config.GetSection("JwtSettings");
@@ -98,14 +102,10 @@ public static class ServiceExtensions
             var repo = sp.GetRequiredService<UserRepository>();
             var logger = sp.GetRequiredService<ILogger<AuthService>>();
             var sms = sp.GetRequiredService<ISmsService>();
+            var projectId = config["Firebase:ProjectId"] ?? "";
             return new AuthService(
                 config, hasher, logger, sms,
-                async idToken =>
-                {
-                    var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
-                    decoded.Claims.TryGetValue("phone_number", out var phone);
-                    return phone?.ToString();
-                },
+                idToken => VerifyFirebaseTokenAsync(idToken, projectId),
                 () => Task.FromResult(new List<User>()),
                 repo.GetByEmailAsync,
                 async u => { await repo.CreateAsync(u); });
@@ -114,11 +114,59 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static void InitializeFirebase(IConfiguration config)
+    private static async Task<string?> VerifyFirebaseTokenAsync(string idToken, string projectId)
     {
-        if (FirebaseApp.DefaultInstance != null) return;
-        var projectId = config["Firebase:ProjectId"];
-        if (string.IsNullOrEmpty(projectId)) return;
-        FirebaseApp.Create(new AppOptions { ProjectId = projectId });
+        var certs = await GetGoogleCertsAsync();
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(idToken);
+
+        if (!jwt.Header.TryGetValue("kid", out var kidObj) || kidObj?.ToString() is not string kid
+            || !certs.TryGetValue(kid, out var cert))
+            throw new UnauthorizedAccessException("Invalid Firebase token.");
+
+        handler.ValidateToken(idToken, new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new X509SecurityKey(cert),
+            ValidateIssuer = true,
+            ValidIssuer = $"https://securetoken.google.com/{projectId}",
+            ValidateAudience = true,
+            ValidAudience = projectId,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5),
+        }, out var validatedToken);
+
+        var claims = ((JwtSecurityToken)validatedToken).Claims;
+        return claims.FirstOrDefault(c => c.Type == "phone_number")?.Value;
+    }
+
+    private static async Task<Dictionary<string, X509Certificate2>> GetGoogleCertsAsync()
+    {
+        if (_googleCerts != null && DateTime.UtcNow < _certsExpiry)
+            return _googleCerts;
+
+        await _certLock.WaitAsync();
+        try
+        {
+            if (_googleCerts != null && DateTime.UtcNow < _certsExpiry)
+                return _googleCerts;
+
+            using var http = new HttpClient();
+            var json = await http.GetStringAsync(
+                "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com");
+
+            var raw = JsonSerializer.Deserialize<Dictionary<string, string>>(json)!;
+            _googleCerts = raw.ToDictionary(
+                kvp => kvp.Key,
+                kvp => X509Certificate2.CreateFromPem(kvp.Value));
+            _certsExpiry = DateTime.UtcNow.AddHours(1);
+
+            return _googleCerts;
+        }
+        finally
+        {
+            _certLock.Release();
+        }
     }
 }

@@ -1,7 +1,6 @@
 using HouseOfVastrikaa.API.Extensions;
 using HouseOfVastrikaa.API.Middleware;
 using Serilog;
-using ServiceExtensions = HouseOfVastrikaa.API.Extensions.ServiceExtensions;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -23,8 +22,6 @@ try
     builder.Services.AddApplicationServices();
 
     var app = builder.Build();
-
-    ServiceExtensions.InitializeFirebase(builder.Configuration);
 
     app.UseMiddleware<ExceptionMiddleware>();
     app.UseMiddleware<RequestLoggingMiddleware>();
