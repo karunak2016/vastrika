@@ -26,6 +26,15 @@ export interface RegisterRequest {
   phone?: string
 }
 
+export interface OtpSendRequest {
+  phone: string
+}
+
+export interface OtpVerifyRequest {
+  phone: string
+  otp: string
+}
+
 // ─── Category ────────────────────────────────────────────────────────────────
 
 export interface Category {

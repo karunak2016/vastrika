@@ -67,6 +67,20 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("otp/send")]
+    public async Task<IActionResult> SendOtp(OtpSendRequestDto dto)
+    {
+        await _auth.SendOtpAsync(dto);
+        return Ok(new { message = "OTP sent." });
+    }
+
+    [HttpPost("otp/verify")]
+    public async Task<IActionResult> VerifyOtp(OtpVerifyRequestDto dto)
+    {
+        var result = await _auth.VerifyOtpAsync(dto);
+        return Ok(result);
+    }
+
     [HttpPost("admin/login")]
     public async Task<IActionResult> AdminLogin(LoginRequestDto dto)
     {

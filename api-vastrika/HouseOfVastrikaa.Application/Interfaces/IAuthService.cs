@@ -8,4 +8,6 @@ public interface IAuthService
     Task<AuthResponseDto> LoginAsync(LoginRequestDto dto);
     Task<AuthResponseDto> AdminLoginAsync(LoginRequestDto dto);
     Task<AuthResponseDto> RefreshTokenAsync(string token);
+    Task SendOtpAsync(OtpSendRequestDto dto);
+    Task<AuthResponseDto> VerifyOtpAsync(OtpVerifyRequestDto dto);
 }

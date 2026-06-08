@@ -1,5 +1,6 @@
 using System.Text;
 using HouseOfVastrikaa.Application.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 using HouseOfVastrikaa.Application.Services;
 using HouseOfVastrikaa.Domain.Entities;
 using HouseOfVastrikaa.Infrastructure.Data;
@@ -83,6 +84,7 @@ public static class ServiceExtensions
         services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<ICouponService, CouponService>();
 
+        services.AddMemoryCache();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
         services.AddScoped<IAuthService>(sp =>
@@ -91,8 +93,9 @@ public static class ServiceExtensions
             var hasher = sp.GetRequiredService<IPasswordHasher<User>>();
             var repo = sp.GetRequiredService<UserRepository>();
             var logger = sp.GetRequiredService<ILogger<AuthService>>();
+            var cache = sp.GetRequiredService<IMemoryCache>();
             return new AuthService(
-                config, hasher, logger,
+                config, hasher, logger, cache,
                 () => Task.FromResult(new List<User>()),
                 repo.GetByEmailAsync,
                 async u => { await repo.CreateAsync(u); });

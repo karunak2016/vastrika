@@ -6,6 +6,7 @@ using HouseOfVastrikaa.Application.Interfaces;
 using HouseOfVastrikaa.Domain.Entities;
 using HouseOfVastrikaa.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -17,6 +18,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _config;
     private readonly IPasswordHasher<User> _hasher;
     private readonly ILogger<AuthService> _logger;
+    private readonly IMemoryCache _cache;
     private readonly Func<Task<List<User>>> _getAllUsers;
     private readonly Func<string, Task<User?>> _getUserByEmail;
     private readonly Func<User, Task> _createUser;
@@ -25,6 +27,7 @@ public class AuthService : IAuthService
         IConfiguration config,
         IPasswordHasher<User> hasher,
         ILogger<AuthService> logger,
+        IMemoryCache cache,
         Func<Task<List<User>>> getAllUsers,
         Func<string, Task<User?>> getUserByEmail,
         Func<User, Task> createUser)
@@ -32,6 +35,7 @@ public class AuthService : IAuthService
         _config = config;
         _hasher = hasher;
         _logger = logger;
+        _cache = cache;
         _getAllUsers = getAllUsers;
         _getUserByEmail = getUserByEmail;
         _createUser = createUser;
@@ -136,6 +140,35 @@ public class AuthService : IAuthService
             _logger.LogError(ex, "Token refresh failed");
             throw;
         }
+    }
+
+    public Task SendOtpAsync(OtpSendRequestDto dto)
+    {
+        var otp = Random.Shared.Next(100000, 999999).ToString();
+        _cache.Set($"otp:{dto.Phone}", otp, TimeSpan.FromMinutes(10));
+        // TODO: Replace with SMS provider (MSG91 / Twilio / Fast2SMS)
+        _logger.LogInformation("OTP for {Phone}: {Otp}", dto.Phone, otp);
+        return Task.CompletedTask;
+    }
+
+    public async Task<AuthResponseDto> VerifyOtpAsync(OtpVerifyRequestDto dto)
+    {
+        if (!_cache.TryGetValue($"otp:{dto.Phone}", out string? stored) || stored != dto.Otp)
+            throw new UnauthorizedAccessException("Invalid or expired OTP.");
+
+        _cache.Remove($"otp:{dto.Phone}");
+
+        var email = $"{dto.Phone}@vastrikaa.local";
+        var user = await _getUserByEmail(email);
+        if (user == null)
+        {
+            user = new User { Name = "Customer", Email = email, Phone = dto.Phone, Role = UserRole.Customer };
+            user.PasswordHash = _hasher.HashPassword(user, Guid.NewGuid().ToString());
+            await _createUser(user);
+            user = await _getUserByEmail(email) ?? user;
+        }
+
+        return BuildToken(user);
     }
 
     private AuthResponseDto BuildToken(User user)
