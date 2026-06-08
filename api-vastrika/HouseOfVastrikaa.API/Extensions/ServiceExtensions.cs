@@ -91,9 +91,6 @@ public static class ServiceExtensions
         // services.AddHttpClient<ISmsService, Msg91SmsService>();
         services.AddScoped<ISmsService, MockSmsService>();
 
-        // Initialize Firebase once at startup
-        InitializeFirebase(services.BuildServiceProvider().GetRequiredService<IConfiguration>());
-
         services.AddScoped<IAuthService>(sp =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
@@ -117,7 +114,7 @@ public static class ServiceExtensions
         return services;
     }
 
-    private static void InitializeFirebase(IConfiguration config)
+    public static void InitializeFirebase(IConfiguration config)
     {
         if (FirebaseApp.DefaultInstance != null) return;
         var projectId = config["Firebase:ProjectId"];
