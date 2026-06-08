@@ -26,7 +26,7 @@ export function Footer() {
               <li><Link to="/products" className="hover:text-white transition-colors">All Sarees</Link></li>
               <li><Link to="/products/fabric/Silk" className="hover:text-white transition-colors">Silk Sarees</Link></li>
               <li><Link to="/products/fabric/Cotton" className="hover:text-white transition-colors">Cotton Sarees</Link></li>
-              <li><Link to="/products?sortBy=newest" className="hover:text-white transition-colors">New Arrivals</Link></li>
+              <li><Link to="/products/sortBy/newest" className="hover:text-white transition-colors">New Arrivals</Link></li>
             </ul>
           </div>
 

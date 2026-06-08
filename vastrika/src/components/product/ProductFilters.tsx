@@ -46,6 +46,7 @@ export function ProductFilters() {
   function qs() {
     const p = new URLSearchParams(searchParams)
     p.delete('page')
+    p.delete('sortBy')
     return p.toString()
   }
 
