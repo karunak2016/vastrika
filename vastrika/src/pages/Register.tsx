@@ -64,16 +64,22 @@ export function Register() {
           recaptchaRef.current = null
         },
       })
+      await recaptchaRef.current.render() // must render before use
       confirmRef.current = await signInWithPhoneNumber(auth, `+91${otpPhone}`, recaptchaRef.current)
       setOtpStep('verify')
     } catch (err: any) {
       recaptchaRef.current?.clear()
       recaptchaRef.current = null
+      console.error('Firebase OTP error:', err?.code, err?.message)
       const msg = err?.code === 'auth/too-many-requests'
         ? 'Too many attempts. Please try again later.'
         : err?.code === 'auth/invalid-phone-number'
           ? 'Invalid phone number format.'
-          : 'Failed to send OTP. Check your number and try again.'
+          : err?.code === 'auth/operation-not-allowed'
+            ? 'Phone sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.'
+            : err?.code === 'auth/captcha-check-failed'
+              ? 'reCAPTCHA failed. Disable reCAPTCHA Enterprise in Firebase Console → Authentication → Settings.'
+              : `Failed to send OTP. (${err?.code ?? 'unknown'})`
       setOtpError(msg)
     } finally {
       setOtpLoading(false)
