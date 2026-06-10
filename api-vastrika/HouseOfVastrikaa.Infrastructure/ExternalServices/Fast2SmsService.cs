@@ -23,19 +23,30 @@ public class Fast2SmsService : ISmsService
 
     public async Task SendOtpAsync(string phone)
     {
+        var apiKey = _config["Fast2Sms:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException("SMS service is not configured.");
+
         var otp = Random.Shared.Next(100000, 999999).ToString();
         _cache.Set($"otp:{phone}", otp, TimeSpan.FromMinutes(10));
 
-        var apiKey = _config["Fast2Sms:ApiKey"]!;
         var url = $"https://www.fast2sms.com/dev/bulkV2?authorization={apiKey}&route=otp&numbers={phone}&variables_values={otp}&flash=0";
 
         var response = await _http.GetAsync(url);
         var body = await response.Content.ReadAsStringAsync();
         _logger.LogInformation("Fast2SMS response for {Phone}: {Body}", phone, body);
 
-        var doc = JsonDocument.Parse(body);
-        if (!doc.RootElement.GetProperty("return").GetBoolean())
+        if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException("Failed to send OTP. Please try again.");
+
+        using var doc = JsonDocument.Parse(body);
+        var success = doc.RootElement.TryGetProperty("return", out var ret) && ret.GetBoolean();
+        if (!success)
+        {
+            var message = doc.RootElement.TryGetProperty("message", out var msg) ? msg.ToString() : body;
+            _logger.LogWarning("Fast2SMS rejected request for {Phone}: {Message}", phone, message);
+            throw new InvalidOperationException("Failed to send OTP. Please try again.");
+        }
     }
 
     public Task VerifyOtpAsync(string phone, string otp)

@@ -92,10 +92,10 @@ public static class ServiceExtensions
 
         services.AddMemoryCache();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-        // Stage 1 — mock (testing only):
-        // services.AddScoped<ISmsService, MockSmsService>();
-        // Stage 2+ — Fast2SMS (real SMS):
-        services.AddHttpClient<ISmsService, Fast2SmsService>();
+        // Stage 1 — mock (OTP = 123456, no DLT needed):
+        services.AddScoped<ISmsService, MockSmsService>();
+        // Stage 2+ — Fast2SMS (enable after DLT registration):
+        // services.AddHttpClient<ISmsService, Fast2SmsService>();
 
         services.AddScoped<IAuthService>(sp =>
         {
