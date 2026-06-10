@@ -55,15 +55,26 @@ export function Register() {
     if (!/^\d{10}$/.test(otpPhone)) { setOtpError('Enter a valid 10-digit mobile number.'); return }
     setOtpLoading(true)
     try {
-      if (!recaptchaRef.current) {
-        recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
-      }
+      // Always create a fresh verifier to avoid stale reCAPTCHA state
+      recaptchaRef.current?.clear()
+      recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        'expired-callback': () => {
+          recaptchaRef.current?.clear()
+          recaptchaRef.current = null
+        },
+      })
       confirmRef.current = await signInWithPhoneNumber(auth, `+91${otpPhone}`, recaptchaRef.current)
       setOtpStep('verify')
-    } catch {
+    } catch (err: any) {
       recaptchaRef.current?.clear()
       recaptchaRef.current = null
-      setOtpError('Failed to send OTP. Check your number and try again.')
+      const msg = err?.code === 'auth/too-many-requests'
+        ? 'Too many attempts. Please try again later.'
+        : err?.code === 'auth/invalid-phone-number'
+          ? 'Invalid phone number format.'
+          : 'Failed to send OTP. Check your number and try again.'
+      setOtpError(msg)
     } finally {
       setOtpLoading(false)
     }
