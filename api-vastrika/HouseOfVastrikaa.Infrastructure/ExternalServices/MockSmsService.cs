@@ -3,9 +3,6 @@ using Microsoft.Extensions.Logging;
 
 namespace HouseOfVastrikaa.Infrastructure.ExternalServices;
 
-// Temporary: accepts fixed OTP "123456" for all numbers.
-// To go live, replace registration in ServiceExtensions.cs:
-//   services.AddHttpClient<ISmsService, Msg91SmsService>();
 public class MockSmsService : ISmsService
 {
     private const string FixedOtp = "123456";

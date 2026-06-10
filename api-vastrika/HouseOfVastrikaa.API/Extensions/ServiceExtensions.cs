@@ -90,10 +90,12 @@ public static class ServiceExtensions
         services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<ICouponService, CouponService>();
 
+        services.AddMemoryCache();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-        // Switch to Msg91SmsService when SMS subscription is ready:
-        // services.AddHttpClient<ISmsService, Msg91SmsService>();
-        services.AddScoped<ISmsService, MockSmsService>();
+        // Stage 1 — mock (testing only):
+        // services.AddScoped<ISmsService, MockSmsService>();
+        // Stage 2+ — Fast2SMS (real SMS):
+        services.AddHttpClient<ISmsService, Fast2SmsService>();
 
         services.AddScoped<IAuthService>(sp =>
         {

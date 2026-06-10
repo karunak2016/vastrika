@@ -1,8 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
-import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth'
-import { auth } from '../lib/firebase'
 import { authApi } from '../api/auth'
 import { useAuthStore } from '../stores/authStore'
 import { Input } from '../components/ui/Input'
@@ -20,14 +18,12 @@ export function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // OTP flow (Firebase)
+  // OTP flow
   const [otpPhone, setOtpPhone] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [otpStep, setOtpStep] = useState<'phone' | 'verify'>('phone')
   const [otpError, setOtpError] = useState('')
   const [otpLoading, setOtpLoading] = useState(false)
-  const recaptchaRef = useRef<RecaptchaVerifier | null>(null)
-  const confirmRef = useRef<ConfirmationResult | null>(null)
 
   function field(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -55,32 +51,10 @@ export function Register() {
     if (!/^\d{10}$/.test(otpPhone)) { setOtpError('Enter a valid 10-digit mobile number.'); return }
     setOtpLoading(true)
     try {
-      // Always create a fresh verifier to avoid stale reCAPTCHA state
-      recaptchaRef.current?.clear()
-      recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-        'expired-callback': () => {
-          recaptchaRef.current?.clear()
-          recaptchaRef.current = null
-        },
-      })
-      await recaptchaRef.current.render() // must render before use
-      confirmRef.current = await signInWithPhoneNumber(auth, `+91${otpPhone}`, recaptchaRef.current)
+      await authApi.sendOtp({ phone: otpPhone })
       setOtpStep('verify')
-    } catch (err: any) {
-      recaptchaRef.current?.clear()
-      recaptchaRef.current = null
-      console.error('Firebase OTP error:', err?.code, err?.message)
-      const msg = err?.code === 'auth/too-many-requests'
-        ? 'Too many attempts. Please try again later.'
-        : err?.code === 'auth/invalid-phone-number'
-          ? 'Invalid phone number format.'
-          : err?.code === 'auth/operation-not-allowed'
-            ? 'Phone sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.'
-            : err?.code === 'auth/captcha-check-failed'
-              ? 'reCAPTCHA failed. Disable reCAPTCHA Enterprise in Firebase Console → Authentication → Settings.'
-              : `Failed to send OTP. (${err?.code ?? 'unknown'})`
-      setOtpError(msg)
+    } catch {
+      setOtpError('Failed to send OTP. Please try again.')
     } finally {
       setOtpLoading(false)
     }
@@ -91,13 +65,11 @@ export function Register() {
     setOtpError('')
     setOtpLoading(true)
     try {
-      const result = await confirmRef.current!.confirm(otpCode)
-      const idToken = await result.user.getIdToken()
-      const res = await authApi.loginWithFirebase({ idToken })
+      const res = await authApi.verifyOtp({ phone: otpPhone, otp: otpCode })
       setAuth({ name: res.name, email: res.email, role: res.role }, res.token)
       navigate('/')
     } catch {
-      setOtpError('Invalid OTP. Please try again.')
+      setOtpError('Invalid or expired OTP.')
     } finally {
       setOtpLoading(false)
     }
@@ -184,9 +156,7 @@ export function Register() {
                 {otpError && (
                   <div className="rounded bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{otpError}</div>
                 )}
-                <div className="text-sm text-gray-500 mb-2">
-                  Enter your mobile number to get a one-time password. No email or password needed.
-                </div>
+                <p className="text-sm text-gray-500">Enter your mobile number to get a one-time password. No email or password needed.</p>
                 <div className="flex flex-col gap-1">
                   <label htmlFor="otpPhone" className="text-sm font-medium text-gray-700">Mobile Number</label>
                   <div className="flex">
@@ -210,9 +180,9 @@ export function Register() {
                 {otpError && (
                   <div className="rounded bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{otpError}</div>
                 )}
-                <div className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500">
                   OTP sent to <span className="font-medium text-gray-700">+91 {otpPhone}</span>
-                </div>
+                </p>
                 <Input
                   id="otpCode"
                   label="Enter OTP"
@@ -240,7 +210,6 @@ export function Register() {
           <Link to="/login" className="font-medium text-primary-800 hover:underline">Sign in</Link>
         </p>
       </div>
-      <div id="recaptcha-container" />
     </div>
   )
 }
