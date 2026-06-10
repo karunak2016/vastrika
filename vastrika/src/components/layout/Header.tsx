@@ -7,6 +7,7 @@ import { useWishlistStore } from '../../stores/wishlistStore'
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
 
@@ -74,17 +75,25 @@ export function Header() {
             </button>
 
             {isAuthenticated ? (
-              <div className="relative group">
-                <button className="flex items-center gap-1.5 rounded-full p-1.5 text-gray-600 hover:text-primary-800 transition-colors">
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  className="flex items-center gap-1.5 rounded-full p-1.5 text-gray-600 hover:text-primary-800 transition-colors"
+                >
                   <User className="h-5 w-5" />
                   <span className="hidden sm:block text-sm font-medium">{displayName}</span>
                 </button>
-                <div className="absolute right-0 top-full mt-1 hidden w-44 rounded-lg border border-gray-100 bg-white py-1 shadow-lg group-hover:block">
-                  <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</Link>
-                  <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Orders</Link>
-                  <hr className="my-1" />
-                  <button onClick={handleLogout} className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">Logout</button>
-                </div>
+                {userMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
+                    <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-lg border border-gray-100 bg-white py-1 shadow-lg">
+                      <Link to="/profile" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</Link>
+                      <Link to="/orders" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Orders</Link>
+                      <hr className="my-1" />
+                      <button onClick={() => { setUserMenuOpen(false); handleLogout() }} className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">Logout</button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <Link to="/login" className="hidden sm:inline-flex items-center gap-1 rounded border border-primary-800 px-3 py-1.5 text-sm font-medium text-primary-800 hover:bg-primary-50 transition-colors">
