@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { authApi } from '../api/auth'
@@ -24,6 +24,12 @@ export function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    if (!error) return
+    const t = setTimeout(() => setError(''), 10000)
+    return () => clearTimeout(t)
+  }, [error])
+
   // Derive mode from what the user has typed
   const mode: Mode = isPhone(identifier)
     ? 'otp-send'
@@ -41,6 +47,10 @@ export function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    if (mode === 'unknown') {
+      setError('Enter a valid email address or 10-digit mobile number.')
+      return
+    }
     setLoading(true)
     try {
       if (mode === 'email') {
@@ -136,7 +146,6 @@ export function Login() {
               className="w-full"
               size="lg"
               loading={loading}
-              disabled={mode === 'unknown'}
             >
               {mode === 'otp-send' ? 'Send OTP' : 'Sign In'}
             </Button>
