@@ -1,0 +1,8 @@
+namespace HouseOfVastrikaa.Application.DTOs.Auth;
+
+public class UpdateProfileDto
+{
+    public string Name { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string? Phone { get; set; }
+}

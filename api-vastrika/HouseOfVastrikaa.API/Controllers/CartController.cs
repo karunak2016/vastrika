@@ -8,7 +8,7 @@ namespace HouseOfVastrikaa.API.Controllers;
 
 [ApiController]
 [Route("api/cart")]
-[Authorize(Roles = "Customer")]
+[Authorize(Roles = "Customer,Admin")]
 public class CartController : ControllerBase
 {
     private readonly ICartService _cart;

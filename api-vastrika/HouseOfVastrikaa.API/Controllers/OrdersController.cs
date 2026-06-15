@@ -23,7 +23,7 @@ public class OrdersController : ControllerBase
     private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpGet]
-    [Authorize(Roles = "Customer")]
+    [Authorize(Roles = "Customer,Admin")]
     public async Task<IActionResult> GetMyOrders()
     {
         try
@@ -39,7 +39,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [Authorize(Roles = "Customer")]
+    [Authorize(Roles = "Customer,Admin")]
     public async Task<IActionResult> GetById(int id)
     {
         try
@@ -56,7 +56,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Customer")]
+    [Authorize(Roles = "Customer,Admin")]
     public async Task<IActionResult> PlaceOrder(PlaceOrderDto dto)
     {
         try
@@ -74,7 +74,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost("{id:int}/cancel")]
-    [Authorize(Roles = "Customer")]
+    [Authorize(Roles = "Customer,Admin")]
     public async Task<IActionResult> Cancel(int id, [FromBody] string? reason = null)
     {
         try

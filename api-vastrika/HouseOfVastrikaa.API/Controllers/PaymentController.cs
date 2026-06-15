@@ -7,7 +7,7 @@ namespace HouseOfVastrikaa.API.Controllers;
 
 [ApiController]
 [Route("api/payment")]
-[Authorize(Roles = "Customer")]
+[Authorize(Roles = "Customer,Admin")]
 public class PaymentController : ControllerBase
 {
     private readonly IPaymentService _payment;

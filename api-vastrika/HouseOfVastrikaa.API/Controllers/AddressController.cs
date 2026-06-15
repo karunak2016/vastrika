@@ -8,7 +8,7 @@ namespace HouseOfVastrikaa.API.Controllers;
 
 [ApiController]
 [Route("api/addresses")]
-[Authorize(Roles = "Customer")]
+[Authorize(Roles = "Customer,Admin")]
 public class AddressController : ControllerBase
 {
     private readonly AddressRepository _repo;

@@ -79,9 +79,6 @@ public class AuthService : IAuthService
             var user = await _getUserByEmail(dto.Email)
                 ?? throw new UnauthorizedAccessException("Invalid credentials.");
 
-            if (user.Role == UserRole.Admin)
-                throw new UnauthorizedAccessException("Use admin login.");
-
             var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
             if (result == PasswordVerificationResult.Failed)
                 throw new UnauthorizedAccessException("Invalid credentials.");

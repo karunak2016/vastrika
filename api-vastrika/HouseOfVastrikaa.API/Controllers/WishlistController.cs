@@ -7,7 +7,7 @@ namespace HouseOfVastrikaa.API.Controllers;
 
 [ApiController]
 [Route("api/wishlist")]
-[Authorize(Roles = "Customer")]
+[Authorize(Roles = "Customer,Admin")]
 public class WishlistController : ControllerBase
 {
     private readonly IWishlistService _wishlist;

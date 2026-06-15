@@ -44,6 +44,14 @@ public class UserRepository
         return p.Get<int>("@NewUserId");
     }
 
+    public async Task UpdateProfileAsync(int userId, string name, string email, string? phone)
+    {
+        using var conn = _db.Create();
+        await conn.ExecuteAsync(
+            "UPDATE Users SET Name=@Name, Email=@Email, Phone=@Phone, UpdatedAt=GETUTCDATE() WHERE Id=@UserId",
+            new { UserId = userId, Name = name, Email = email, Phone = phone });
+    }
+
     public async Task<(IEnumerable<User> Items, int Total)> GetAllAsync(string? role, string? searchTerm, int page, int pageSize)
     {
         using var conn = _db.Create();

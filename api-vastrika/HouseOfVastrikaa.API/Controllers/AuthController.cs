@@ -1,5 +1,8 @@
+using System.Security.Claims;
 using HouseOfVastrikaa.Application.DTOs.Auth;
 using HouseOfVastrikaa.Application.Interfaces;
+using HouseOfVastrikaa.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HouseOfVastrikaa.API.Controllers;
@@ -10,11 +13,13 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _auth;
     private readonly ILogger<AuthController> _logger;
+    private readonly UserRepository _users;
 
-    public AuthController(IAuthService auth, ILogger<AuthController> logger)
+    public AuthController(IAuthService auth, ILogger<AuthController> logger, UserRepository users)
     {
         _auth = auth;
         _logger = logger;
+        _users = users;
     }
 
     [HttpPost("register")]
@@ -86,6 +91,15 @@ public class AuthController : ControllerBase
     {
         var result = await _auth.VerifyOtpAsync(dto);
         return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _users.UpdateProfileAsync(userId, dto.Name, dto.Email, dto.Phone);
+        return Ok(new { message = "Profile updated." });
     }
 
     [HttpPost("admin/login")]
