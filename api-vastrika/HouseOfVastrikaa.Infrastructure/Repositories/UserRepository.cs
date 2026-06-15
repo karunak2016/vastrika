@@ -47,9 +47,10 @@ public class UserRepository
     public async Task UpdateProfileAsync(int userId, string name, string email, string? phone)
     {
         using var conn = _db.Create();
-        await conn.ExecuteAsync(
-            "UPDATE Users SET Name=@Name, Email=@Email, Phone=@Phone, UpdatedAt=GETUTCDATE() WHERE Id=@UserId",
-            new { UserId = userId, Name = name, Email = email, Phone = phone });
+        var sql = string.IsNullOrWhiteSpace(phone)
+            ? "UPDATE Users SET Name=@Name, Email=@Email, UpdatedAt=GETUTCDATE() WHERE Id=@UserId"
+            : "UPDATE Users SET Name=@Name, Email=@Email, Phone=@Phone, UpdatedAt=GETUTCDATE() WHERE Id=@UserId";
+        await conn.ExecuteAsync(sql, new { UserId = userId, Name = name, Email = email, Phone = phone });
     }
 
     public async Task<(IEnumerable<User> Items, int Total)> GetAllAsync(string? role, string? searchTerm, int page, int pageSize)
