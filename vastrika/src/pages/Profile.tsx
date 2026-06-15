@@ -10,7 +10,7 @@ import { Input } from '../components/ui/Input'
 const emptyForm = { fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' }
 
 export function Profile() {
-  const { user, setAuth } = useAuthStore()
+  const { user, setAuth, token } = useAuthStore()
   const [addresses, setAddresses] = useState<Address[]>([])
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(emptyForm)
@@ -35,13 +35,14 @@ export function Profile() {
     setProfileSaving(true)
     try {
       const email = profileForm.email.trim() || user!.email
-      await authApi.updateProfile({ name: profileForm.name.trim(), email, phone: profileForm.phone.trim() || undefined })
-      const { token } = useAuthStore.getState()
+      const phone = profileForm.phone.trim() || undefined
+      await authApi.updateProfile({ name: profileForm.name.trim(), email, phone })
       setAuth({ name: profileForm.name.trim(), email, role: user!.role }, token ?? '')
       setProfileMsg('Profile updated successfully.')
       setEditingProfile(false)
-    } catch {
-      setProfileMsg('Failed to update profile.')
+    } catch (err: any) {
+      const msg = err?.response?.data?.error ?? err?.message ?? 'Unknown error'
+      setProfileMsg(`Failed to update profile: ${msg}`)
     } finally {
       setProfileSaving(false)
     }
