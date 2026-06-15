@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Plus, Trash2, MapPin } from 'lucide-react'
+import { Plus, Trash2, MapPin, Pencil } from 'lucide-react'
 import type { Address } from '../types'
 import { addressesApi } from '../api/addresses'
+import { authApi } from '../api/auth'
 import { useAuthStore } from '../stores/authStore'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -9,12 +10,42 @@ import { Input } from '../components/ui/Input'
 const emptyForm = { fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' }
 
 export function Profile() {
-  const { user } = useAuthStore()
+  const { user, setAuth } = useAuthStore()
   const [addresses, setAddresses] = useState<Address[]>([])
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
+
+  // Profile edit
+  const isOtpUser = user?.email?.endsWith('@vastrikaa.local') ?? false
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [profileForm, setProfileForm] = useState({ name: user?.name ?? '', email: '', phone: '' })
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [profileMsg, setProfileMsg] = useState('')
+
+  function startEditProfile() {
+    setProfileForm({ name: user?.name ?? '', email: isOtpUser ? '' : (user?.email ?? ''), phone: '' })
+    setEditingProfile(true)
+    setProfileMsg('')
+  }
+
+  async function saveProfile(e: React.FormEvent) {
+    e.preventDefault()
+    setProfileSaving(true)
+    try {
+      const email = profileForm.email.trim() || user!.email
+      await authApi.updateProfile({ name: profileForm.name.trim(), email, phone: profileForm.phone.trim() || undefined })
+      const { token } = useAuthStore.getState()
+      setAuth({ name: profileForm.name.trim(), email, role: user!.role }, token ?? '')
+      setProfileMsg('Profile updated successfully.')
+      setEditingProfile(false)
+    } catch {
+      setProfileMsg('Failed to update profile.')
+    } finally {
+      setProfileSaving(false)
+    }
+  }
 
   useEffect(() => {
     addressesApi.list().then(setAddresses).catch(() => {})
@@ -79,17 +110,51 @@ export function Profile() {
 
       {/* User info */}
       <div className="rounded-lg border border-gray-100 bg-white p-6 mb-8">
-        <h2 className="font-semibold text-gray-900 mb-4">Account Details</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-gray-500">Name</p>
-            <p className="font-medium text-gray-900">{user?.name}</p>
-          </div>
-          <div>
-            <p className="text-gray-500">Email</p>
-            <p className="font-medium text-gray-900">{user?.email}</p>
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-gray-900">Account Details</h2>
+          {!editingProfile && (
+            <button onClick={startEditProfile} className="flex items-center gap-1 text-sm text-primary-800 hover:underline">
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </button>
+          )}
         </div>
+
+        {isOtpUser && !editingProfile && (
+          <div className="mb-4 rounded bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+            You registered with mobile OTP. Add your email and name to complete your profile.
+            <button onClick={startEditProfile} className="ml-2 font-medium underline">Update now</button>
+          </div>
+        )}
+
+        {profileMsg && (
+          <div className="mb-4 rounded bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">{profileMsg}</div>
+        )}
+
+        {editingProfile ? (
+          <form onSubmit={saveProfile} className="space-y-3">
+            <Input label="Full Name" value={profileForm.name} onChange={(e) => setProfileForm((f) => ({ ...f, name: e.target.value }))} required />
+            <Input label="Email" type="email" value={profileForm.email} onChange={(e) => setProfileForm((f) => ({ ...f, email: e.target.value }))}
+              placeholder={isOtpUser ? 'Add your email address' : user?.email}
+              required={isOtpUser}
+            />
+            <Input label="Phone (optional)" type="tel" value={profileForm.phone} onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))} placeholder="10-digit mobile number" />
+            <div className="flex gap-2 pt-1">
+              <Button type="submit" size="sm" loading={profileSaving}>Save Changes</Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setEditingProfile(false)}>Cancel</Button>
+            </div>
+          </form>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-gray-500">Name</p>
+              <p className="font-medium text-gray-900">{user?.name}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Email</p>
+              <p className="font-medium text-gray-900">{isOtpUser ? <span className="text-amber-600 italic">Not set</span> : user?.email}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Addresses */}
