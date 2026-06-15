@@ -36,7 +36,11 @@ export function Login() {
       setAuth({ name: res.name, email: res.email, role: res.role }, res.token)
       navigate(from, { replace: true })
     } catch {
-      setError('Invalid email or password.')
+      setError(
+        form.email.endsWith('@vastrikaa.local')
+          ? 'This account was created with OTP. Please use the "Login with OTP" tab and enter your mobile number.'
+          : 'Invalid email or password.'
+      )
     } finally {
       setLoading(false)
     }
