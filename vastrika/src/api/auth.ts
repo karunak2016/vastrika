@@ -18,5 +18,5 @@ export const authApi = {
     apiClient.post<AuthResponse>('/auth/firebase', data).then((r) => r.data),
 
   updateProfile: (data: { name: string; email: string; phone?: string }) =>
-    apiClient.put('/auth/profile', data).then((r) => r.data),
+    apiClient.post('/auth/profile/update', data).then((r) => r.data),
 }
