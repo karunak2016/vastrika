@@ -128,6 +128,11 @@ export function Profile() {
     }
   }
 
+  async function handleSetDefault(id: number) {
+    await addressesApi.setDefault(id)
+    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })))
+  }
+
   async function handleDelete(id: number) {
     await addressesApi.remove(id)
     setAddresses((prev) => prev.filter((a) => a.id !== id))
@@ -282,7 +287,12 @@ export function Profile() {
                     {addr.country && addr.country !== 'India' && (
                       <p className="text-gray-500">{addr.country}</p>
                     )}
-                    {addr.isDefault && <span className="mt-1 inline-block text-xs text-primary-800 font-medium">Default</span>}
+                    <div className="mt-1 flex items-center gap-3">
+                      {addr.isDefault
+                        ? <span className="text-xs text-primary-800 font-medium">Default</span>
+                        : <button onClick={() => handleSetDefault(addr.id)} className="text-xs text-gray-500 hover:text-primary-800 underline">Set as Default</button>
+                      }
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => startEdit(addr)} className="text-sm text-primary-800 hover:underline">Edit</button>
