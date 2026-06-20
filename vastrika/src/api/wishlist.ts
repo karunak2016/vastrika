@@ -10,7 +10,7 @@ export const wishlistApi = {
     apiClient.post('/wishlist/items', productId).then((r) => r.data),
 
   remove: (productId: number) =>
-    apiClient.delete(`/wishlist/items/${productId}`),
+    apiClient.post(`/wishlist/items/remove/${productId}`),
 
   check: (productId: number) =>
     apiClient

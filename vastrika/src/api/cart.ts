@@ -8,13 +8,12 @@ export const cartApi = {
   addItem: (data: AddToCartRequest) =>
     apiClient.post<Cart>('/cart/items', data).then((r) => r.data),
 
-  // API takes a raw int in the body, not an object
   updateItem: (id: number, quantity: number) =>
-    apiClient.put<Cart>(`/cart/items/${id}`, quantity).then((r) => r.data),
+    apiClient.post<Cart>(`/cart/items/update/${id}`, quantity).then((r) => r.data),
 
   removeItem: (id: number) =>
-    apiClient.delete<Cart>(`/cart/items/${id}`).then((r) => r.data),
+    apiClient.post<Cart>(`/cart/items/remove/${id}`).then((r) => r.data),
 
   clear: () =>
-    apiClient.delete('/cart'),
+    apiClient.post('/cart/clear'),
 }
