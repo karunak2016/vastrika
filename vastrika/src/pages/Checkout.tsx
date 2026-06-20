@@ -12,6 +12,7 @@ import { useAuthStore } from '../stores/authStore'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Spinner } from '../components/ui/Spinner'
+import { INDIA_STATES, COUNTRIES } from '../lib/locationData'
 
 export function Checkout() {
   const navigate = useNavigate()
@@ -24,7 +25,7 @@ export function Checkout() {
   const [loading, setLoading] = useState(true)
   const [placing, setPlacing] = useState(false)
   const [showNewAddress, setShowNewAddress] = useState(false)
-  const [newAddr, setNewAddr] = useState({ fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' })
+  const [newAddr, setNewAddr] = useState({ fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', country: 'India' })
 
   // Coupon state
   const [couponCode, setCouponCode] = useState('')
@@ -50,12 +51,13 @@ export function Checkout() {
       id: result.id, userId: 0, fullName: newAddr.fullName, phone: newAddr.phone,
       line1: newAddr.line1, line2: newAddr.line2 || undefined,
       city: newAddr.city, state: newAddr.state, pincode: newAddr.pincode,
+      country: newAddr.country,
       isDefault: addresses.length === 0,
     }
     setAddresses((prev) => [...prev, fullAddr])
     setSelectedAddressId(result.id)
     setShowNewAddress(false)
-    setNewAddr({ fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' })
+    setNewAddr({ fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', country: 'India' })
   }
 
   async function handleValidateCoupon() {
@@ -174,6 +176,7 @@ export function Checkout() {
                     <p className="font-medium text-gray-900">{addr.fullName} · {addr.phone}</p>
                     <p className="text-gray-600">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}</p>
                     <p className="text-gray-600">{addr.city}, {addr.state} – {addr.pincode}</p>
+                    {addr.country && addr.country !== 'India' && <p className="text-gray-500 text-xs">{addr.country}</p>}
                   </div>
                 </label>
               ))}
@@ -190,11 +193,31 @@ export function Checkout() {
                 </div>
                 <Input label="Address Line 1" value={newAddr.line1} onChange={(e) => setNewAddr((p) => ({ ...p, line1: e.target.value }))} />
                 <Input label="Address Line 2 (optional)" value={newAddr.line2} onChange={(e) => setNewAddr((p) => ({ ...p, line2: e.target.value }))} />
-                <div className="grid grid-cols-3 gap-3">
-                  <Input label="City" value={newAddr.city} onChange={(e) => setNewAddr((p) => ({ ...p, city: e.target.value }))} />
-                  <Input label="State" value={newAddr.state} onChange={(e) => setNewAddr((p) => ({ ...p, state: e.target.value }))} />
-                  <Input label="Pincode" value={newAddr.pincode} onChange={(e) => setNewAddr((p) => ({ ...p, pincode: e.target.value }))} />
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-gray-600">Country</label>
+                  <select value={newAddr.country} onChange={(e) => setNewAddr((p) => ({ ...p, country: e.target.value, state: '' }))}
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-800 focus:outline-none focus:ring-1 focus:ring-primary-800">
+                    {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input label="City" value={newAddr.city} onChange={(e) => setNewAddr((p) => ({ ...p, city: e.target.value }))} />
+                  {newAddr.country === 'India' ? (
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-medium text-gray-600">State / UT</label>
+                      <select value={newAddr.state} onChange={(e) => setNewAddr((p) => ({ ...p, state: e.target.value }))}
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-800 focus:outline-none focus:ring-1 focus:ring-primary-800">
+                        <option value="">Select state</option>
+                        {INDIA_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  ) : (
+                    <Input label="State / Province" value={newAddr.state} onChange={(e) => setNewAddr((p) => ({ ...p, state: e.target.value }))} />
+                  )}
+                </div>
+                <Input label={newAddr.country === 'India' ? 'Pincode' : 'ZIP / Postal Code'} value={newAddr.pincode}
+                  onChange={(e) => setNewAddr((p) => ({ ...p, pincode: e.target.value }))}
+                  placeholder={newAddr.country === 'India' ? '6-digit pincode' : 'Postal code'} />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleSaveAddress}>Save Address</Button>
                   <Button size="sm" variant="ghost" onClick={() => setShowNewAddress(false)}>Cancel</Button>

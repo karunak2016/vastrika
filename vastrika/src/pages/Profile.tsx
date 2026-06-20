@@ -6,8 +6,44 @@ import { authApi } from '../api/auth'
 import { useAuthStore } from '../stores/authStore'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { INDIA_STATES, COUNTRIES } from '../lib/locationData'
 
-const emptyForm = { fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' }
+// ── Form defaults ─────────────────────────────────────────────────────────────
+
+const emptyForm = {
+  fullName: '', phone: '', line1: '', line2: '',
+  city: '', state: '', pincode: '', country: 'India',
+}
+
+// ── Select helper ─────────────────────────────────────────────────────────────
+
+function Select({
+  label, value, onChange, options, placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: string[]
+  placeholder?: string
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-medium text-gray-600">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-800 focus:outline-none focus:ring-1 focus:ring-primary-800"
+      >
+        {placeholder && <option value="">{placeholder}</option>}
+        {options.map((o) => (
+          <option key={o} value={o}>{o}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function Profile() {
   const { user, setAuth, token } = useAuthStore()
@@ -56,27 +92,33 @@ export function Profile() {
     return (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }))
   }
 
+  const isIndiaForm = form.country === 'India'
+
   async function handleSave() {
     setSaving(true)
     try {
+      const payload = {
+        fullName: form.fullName,
+        phone: form.phone,
+        line1: form.line1,
+        line2: form.line2 || undefined,
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+        country: form.country,
+      }
       if (editId) {
-        await addressesApi.update(editId, { ...form, line2: form.line2 || undefined })
-        setAddresses((prev) => prev.map((a) => a.id === editId ? { ...a, ...form, line2: form.line2 || undefined } : a))
+        await addressesApi.update(editId, payload)
+        setAddresses((prev) =>
+          prev.map((a) => a.id === editId ? { ...a, ...payload, line2: payload.line2 } : a)
+        )
       } else {
-        const created = await addressesApi.create({ ...form, line2: form.line2 || undefined, isDefault: addresses.length === 0 })
-        const newAddr: Address = {
-          id: created.id,
-          userId: 0,
-          fullName: form.fullName,
-          phone: form.phone,
-          line1: form.line1,
-          line2: form.line2 || undefined,
-          city: form.city,
-          state: form.state,
-          pincode: form.pincode,
+        const created = await addressesApi.create({ ...payload, isDefault: addresses.length === 0 })
+        setAddresses((prev) => [...prev, {
+          id: created.id, userId: 0, ...payload,
+          line2: payload.line2,
           isDefault: addresses.length === 0,
-        }
-        setAddresses((prev) => [...prev, newAddr])
+        }])
       }
       setForm(emptyForm)
       setShowForm(false)
@@ -101,6 +143,7 @@ export function Profile() {
       city: addr.city,
       state: addr.state,
       pincode: addr.pincode,
+      country: addr.country || 'India',
     })
     setShowForm(true)
   }
@@ -176,17 +219,47 @@ export function Profile() {
         {showForm && (
           <div className="mb-6 space-y-3 rounded-lg bg-gray-50 p-4">
             <h3 className="text-sm font-medium text-gray-700">{editId ? 'Edit Address' : 'New Address'}</h3>
+
             <div className="grid grid-cols-2 gap-3">
               <Input label="Full Name" value={form.fullName} onChange={field('fullName')} />
               <Input label="Phone" value={form.phone} onChange={field('phone')} />
             </div>
+
             <Input label="Address Line 1" value={form.line1} onChange={field('line1')} />
             <Input label="Address Line 2 (optional)" value={form.line2} onChange={field('line2')} />
-            <div className="grid grid-cols-3 gap-3">
+
+            {/* Country dropdown */}
+            <Select
+              label="Country"
+              value={form.country}
+              onChange={(v) => setForm((f) => ({ ...f, country: v, state: '' }))}
+              options={COUNTRIES}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
               <Input label="City" value={form.city} onChange={field('city')} />
-              <Input label="State" value={form.state} onChange={field('state')} />
-              <Input label="Pincode" value={form.pincode} onChange={field('pincode')} />
+
+              {/* State: dropdown for India, text for others */}
+              {isIndiaForm ? (
+                <Select
+                  label="State / UT"
+                  value={form.state}
+                  onChange={(v) => setForm((f) => ({ ...f, state: v }))}
+                  options={INDIA_STATES}
+                  placeholder="Select state"
+                />
+              ) : (
+                <Input label="State / Province / Region" value={form.state} onChange={field('state')} />
+              )}
             </div>
+
+            <Input
+              label={isIndiaForm ? 'Pincode' : 'ZIP / Postal Code'}
+              value={form.pincode}
+              onChange={field('pincode')}
+              placeholder={isIndiaForm ? '6-digit pincode' : 'Postal code'}
+            />
+
             <div className="flex gap-2 pt-1">
               <Button size="sm" loading={saving} onClick={handleSave}>
                 {editId ? 'Update' : 'Save'} Address
@@ -208,6 +281,9 @@ export function Profile() {
                     <p className="font-medium text-gray-900">{addr.fullName} · {addr.phone}</p>
                     <p className="text-gray-600">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}</p>
                     <p className="text-gray-600">{addr.city}, {addr.state} – {addr.pincode}</p>
+                    {addr.country && addr.country !== 'India' && (
+                      <p className="text-gray-500">{addr.country}</p>
+                    )}
                     {addr.isDefault && <span className="mt-1 inline-block text-xs text-primary-800 font-medium">Default</span>}
                   </div>
                   <div className="flex gap-2">
