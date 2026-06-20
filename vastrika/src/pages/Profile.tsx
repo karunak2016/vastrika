@@ -228,7 +228,7 @@ export function Profile() {
             <Input label="Address Line 1" value={form.line1} onChange={field('line1')} />
             <Input label="Address Line 2 (optional)" value={form.line2} onChange={field('line2')} />
 
-            {/* Country dropdown */}
+            {/* Country → State → City + Pincode */}
             <Select
               label="Country"
               value={form.country}
@@ -236,29 +236,27 @@ export function Profile() {
               options={COUNTRIES}
             />
 
+            {isIndiaForm ? (
+              <Select
+                label="State / UT"
+                value={form.state}
+                onChange={(v) => setForm((f) => ({ ...f, state: v }))}
+                options={INDIA_STATES}
+                placeholder="Select state"
+              />
+            ) : (
+              <Input label="State / Province / Region" value={form.state} onChange={field('state')} />
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <Input label="City" value={form.city} onChange={field('city')} />
-
-              {/* State: dropdown for India, text for others */}
-              {isIndiaForm ? (
-                <Select
-                  label="State / UT"
-                  value={form.state}
-                  onChange={(v) => setForm((f) => ({ ...f, state: v }))}
-                  options={INDIA_STATES}
-                  placeholder="Select state"
-                />
-              ) : (
-                <Input label="State / Province / Region" value={form.state} onChange={field('state')} />
-              )}
+              <Input
+                label={isIndiaForm ? 'Pincode' : 'ZIP / Postal Code'}
+                value={form.pincode}
+                onChange={field('pincode')}
+                placeholder={isIndiaForm ? '6-digit pincode' : 'Postal code'}
+              />
             </div>
-
-            <Input
-              label={isIndiaForm ? 'Pincode' : 'ZIP / Postal Code'}
-              value={form.pincode}
-              onChange={field('pincode')}
-              placeholder={isIndiaForm ? '6-digit pincode' : 'Postal code'}
-            />
 
             <div className="flex gap-2 pt-1">
               <Button size="sm" loading={saving} onClick={handleSave}>

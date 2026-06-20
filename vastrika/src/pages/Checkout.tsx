@@ -193,6 +193,7 @@ export function Checkout() {
                 </div>
                 <Input label="Address Line 1" value={newAddr.line1} onChange={(e) => setNewAddr((p) => ({ ...p, line1: e.target.value }))} />
                 <Input label="Address Line 2 (optional)" value={newAddr.line2} onChange={(e) => setNewAddr((p) => ({ ...p, line2: e.target.value }))} />
+                {/* Country → State → City + Pincode */}
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-600">Country</label>
                   <select value={newAddr.country} onChange={(e) => setNewAddr((p) => ({ ...p, country: e.target.value, state: '' }))}
@@ -200,24 +201,24 @@ export function Checkout() {
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
+                {newAddr.country === 'India' ? (
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-600">State / UT</label>
+                    <select value={newAddr.state} onChange={(e) => setNewAddr((p) => ({ ...p, state: e.target.value }))}
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-800 focus:outline-none focus:ring-1 focus:ring-primary-800">
+                      <option value="">Select state</option>
+                      {INDIA_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                ) : (
+                  <Input label="State / Province" value={newAddr.state} onChange={(e) => setNewAddr((p) => ({ ...p, state: e.target.value }))} />
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <Input label="City" value={newAddr.city} onChange={(e) => setNewAddr((p) => ({ ...p, city: e.target.value }))} />
-                  {newAddr.country === 'India' ? (
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-gray-600">State / UT</label>
-                      <select value={newAddr.state} onChange={(e) => setNewAddr((p) => ({ ...p, state: e.target.value }))}
-                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-800 focus:outline-none focus:ring-1 focus:ring-primary-800">
-                        <option value="">Select state</option>
-                        {INDIA_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                  ) : (
-                    <Input label="State / Province" value={newAddr.state} onChange={(e) => setNewAddr((p) => ({ ...p, state: e.target.value }))} />
-                  )}
+                  <Input label={newAddr.country === 'India' ? 'Pincode' : 'ZIP / Postal Code'} value={newAddr.pincode}
+                    onChange={(e) => setNewAddr((p) => ({ ...p, pincode: e.target.value }))}
+                    placeholder={newAddr.country === 'India' ? '6-digit pincode' : 'Postal code'} />
                 </div>
-                <Input label={newAddr.country === 'India' ? 'Pincode' : 'ZIP / Postal Code'} value={newAddr.pincode}
-                  onChange={(e) => setNewAddr((p) => ({ ...p, pincode: e.target.value }))}
-                  placeholder={newAddr.country === 'India' ? '6-digit pincode' : 'Postal code'} />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleSaveAddress}>Save Address</Button>
                   <Button size="sm" variant="ghost" onClick={() => setShowNewAddress(false)}>Cancel</Button>
