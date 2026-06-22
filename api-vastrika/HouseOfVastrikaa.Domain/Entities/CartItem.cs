@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace HouseOfVastrikaa.Domain.Entities;
 
 public class CartItem
@@ -12,6 +14,7 @@ public class CartItem
     // Populated by sp_Carts_GetWithItems join
     public string? ProductName { get; set; }
     public decimal UnitPrice { get; set; }
+    [JsonPropertyName("imageUrl")]
     public string? DefaultImage { get; set; }
     public int StockQuantity { get; set; }
 }

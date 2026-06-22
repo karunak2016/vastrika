@@ -21,6 +21,7 @@ public class AuthService : IAuthService
     private readonly Func<string, Task<string?>> _verifyFirebaseToken;
     private readonly Func<Task<List<User>>> _getAllUsers;
     private readonly Func<string, Task<User?>> _getUserByEmail;
+    private readonly Func<string, Task<User?>> _getUserByPhone;
     private readonly Func<User, Task> _createUser;
 
     public AuthService(
@@ -31,6 +32,7 @@ public class AuthService : IAuthService
         Func<string, Task<string?>> verifyFirebaseToken,
         Func<Task<List<User>>> getAllUsers,
         Func<string, Task<User?>> getUserByEmail,
+        Func<string, Task<User?>> getUserByPhone,
         Func<User, Task> createUser)
     {
         _config = config;
@@ -40,6 +42,7 @@ public class AuthService : IAuthService
         _verifyFirebaseToken = verifyFirebaseToken;
         _getAllUsers = getAllUsers;
         _getUserByEmail = getUserByEmail;
+        _getUserByPhone = getUserByPhone;
         _createUser = createUser;
     }
 
@@ -51,11 +54,17 @@ public class AuthService : IAuthService
             var existing = await _getUserByEmail(dto.Email);
             if (existing != null) throw new InvalidOperationException("Email already registered.");
 
+            if (!string.IsNullOrWhiteSpace(dto.Phone))
+            {
+                var existingPhone = await _getUserByPhone(dto.Phone);
+                if (existingPhone != null) throw new InvalidOperationException("Mobile number already registered with another account.");
+            }
+
             var user = new User
             {
                 Name = dto.Name,
                 Email = dto.Email,
-                Phone = dto.Phone,
+                Phone = string.IsNullOrWhiteSpace(dto.Phone) ? null : dto.Phone,
                 Role = UserRole.Customer
             };
             user.PasswordHash = _hasher.HashPassword(user, dto.Password);
@@ -150,7 +159,8 @@ public class AuthService : IAuthService
         if (phone.StartsWith("+91")) phone = phone[3..];
 
         var email = $"{phone}@vastrikaa.local";
-        var user = await _getUserByEmail(email);
+        var user = await _getUserByEmail(email)
+            ?? await _getUserByPhone(phone);  // find existing account by phone
         if (user == null)
         {
             user = new User { Name = "Customer", Email = email, Phone = phone, Role = UserRole.Customer };
@@ -169,7 +179,8 @@ public class AuthService : IAuthService
         await _sms.VerifyOtpAsync(dto.Phone, dto.Otp);
 
         var email = $"{dto.Phone}@vastrikaa.local";
-        var user = await _getUserByEmail(email);
+        var user = await _getUserByEmail(email)
+            ?? await _getUserByPhone(dto.Phone);  // find existing account by phone
         if (user == null)
         {
             user = new User { Name = "Customer", Email = email, Phone = dto.Phone, Role = UserRole.Customer };

@@ -44,13 +44,31 @@ public class UserRepository
         return p.Get<int>("@NewUserId");
     }
 
+    public async Task<User?> GetByPhoneAsync(string phone)
+    {
+        using var conn = _db.Create();
+        return await conn.QuerySingleOrDefaultAsync<User>(
+            "sp_Users_GetByPhone",
+            new { Phone = phone },
+            commandType: CommandType.StoredProcedure);
+    }
+
     public async Task UpdateProfileAsync(int userId, string name, string email, string? phone)
     {
         using var conn = _db.Create();
-        var sql = string.IsNullOrWhiteSpace(phone)
-            ? "UPDATE Users SET Name=@Name, Email=@Email, UpdatedAt=GETUTCDATE() WHERE Id=@UserId"
-            : "UPDATE Users SET Name=@Name, Email=@Email, Phone=@Phone, UpdatedAt=GETUTCDATE() WHERE Id=@UserId";
-        await conn.ExecuteAsync(sql, new { UserId = userId, Name = name, Email = email, Phone = phone });
+        await conn.ExecuteAsync(
+            "sp_Users_UpdateProfile",
+            new { UserId = userId, Name = name, Email = email, Phone = string.IsNullOrWhiteSpace(phone) ? null : phone },
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
+
+    public async Task SetPasswordAsync(int userId, string passwordHash)
+    {
+        using var conn = _db.Create();
+        await conn.ExecuteAsync(
+            "sp_Users_SetPassword",
+            new { UserId = userId, PasswordHash = passwordHash },
+            commandType: CommandType.StoredProcedure);
     }
 
     public async Task<(IEnumerable<User> Items, int Total)> GetAllAsync(string? role, string? searchTerm, int page, int pageSize)

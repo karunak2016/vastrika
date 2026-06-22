@@ -53,6 +53,7 @@ public class AddressController : ControllerBase
                 City = dto.City,
                 State = dto.State,
                 Pincode = dto.Pincode,
+                Country = dto.Country,
                 IsDefault = dto.IsDefault
             });
             _logger.LogInformation("Address {AddressId} created for user {UserId}", id, UserId);
@@ -82,6 +83,7 @@ public class AddressController : ControllerBase
                 City = dto.City,
                 State = dto.State,
                 Pincode = dto.Pincode,
+                Country = dto.Country,
                 IsDefault = dto.IsDefault
             });
             _logger.LogInformation("Address {AddressId} updated for user {UserId}", id, UserId);
@@ -92,6 +94,13 @@ public class AddressController : ControllerBase
             _logger.LogError(ex, "Update address {AddressId} failed for user {UserId}", id, UserId);
             throw;
         }
+    }
+
+    [HttpPost("default/{id:int}")]
+    public async Task<IActionResult> SetDefault(int id)
+    {
+        await _repo.SetDefaultAsync(id, UserId);
+        return Ok();
     }
 
     [HttpPost("delete/{id:int}")]
@@ -117,4 +126,5 @@ public record AddressUpsertDto(
     string FullName, string Phone,
     string Line1, string? Line2,
     string City, string State, string Pincode,
+    string Country,
     bool IsDefault);

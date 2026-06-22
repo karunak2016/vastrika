@@ -53,8 +53,15 @@ public class CartRepository : ICartRepository
         p.Add("@Quantity", quantity);
         p.Add("@CartItemId", dbType: DbType.Int32, direction: ParameterDirection.Output);
         p.Add("@NewQuantity", dbType: DbType.Int32, direction: ParameterDirection.Output);
+        p.Add("@Success", dbType: DbType.Boolean, direction: ParameterDirection.Output);
+        p.Add("@ErrorMessage", dbType: DbType.String, size: 200, direction: ParameterDirection.Output);
 
         await conn.ExecuteAsync("sp_CartItems_AddOrUpdate", p, commandType: CommandType.StoredProcedure);
+
+        var success = p.Get<bool>("@Success");
+        if (!success)
+            throw new InvalidOperationException(p.Get<string?>("@ErrorMessage") ?? "Could not add item to cart.");
+
         return (p.Get<int>("@CartItemId"), p.Get<int>("@NewQuantity"));
     }
 

@@ -94,12 +94,29 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("profile")]
+    [HttpPost("profile/update")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await _users.UpdateProfileAsync(userId, dto.Name, dto.Email, dto.Phone);
         return Ok(new { message = "Profile updated." });
+    }
+
+    [Authorize]
+    [HttpPost("profile/set-password")]
+    public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 6)
+            return BadRequest(new { error = "Password must be at least 6 characters." });
+
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = await _users.GetByIdAsync(userId)
+            ?? throw new UnauthorizedAccessException("User not found.");
+
+        var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<HouseOfVastrikaa.Domain.Entities.User>();
+        var hash = hasher.HashPassword(user, dto.NewPassword);
+        await _users.SetPasswordAsync(userId, hash);
+        return Ok(new { message = "Password set successfully. You can now login with your email and password." });
     }
 
     [HttpPost("admin/login")]

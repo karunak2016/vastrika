@@ -88,7 +88,7 @@ public class OrderService : IOrderService
                 Quantity = i.Quantity
             }).ToArray();
 
-            var orderId = await _repo.PlaceAsync(userId, dto.AddressId, dto.PaymentMethod.ToString(),
+            var orderId = await _repo.PlaceAsync(userId, dto.AddressId, dto.PaymentMethod,
                 total, discountAmount, finalAmount, null, itemsJson);
 
             var (header, orderItems) = await _repo.GetByIdAsync(orderId);

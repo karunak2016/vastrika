@@ -110,6 +110,7 @@ public static class ServiceExtensions
                 idToken => VerifyFirebaseTokenAsync(idToken, projectId),
                 () => Task.FromResult(new List<User>()),
                 repo.GetByEmailAsync,
+                repo.GetByPhoneAsync,
                 async u => { await repo.CreateAsync(u); });
         });
 

@@ -39,6 +39,7 @@ public class AddressRepository
         p.Add("@City", a.City);
         p.Add("@State", a.State);
         p.Add("@Pincode", a.Pincode);
+        p.Add("@Country", a.Country);
         p.Add("@IsDefault", a.IsDefault);
         p.Add("@NewAddressId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
@@ -59,8 +60,17 @@ public class AddressRepository
             a.City,
             a.State,
             a.Pincode,
+            a.Country,
             a.IsDefault
         }, commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task SetDefaultAsync(int addressId, int userId)
+    {
+        using var conn = _db.Create();
+        await conn.ExecuteAsync("sp_Addresses_SetDefault",
+            new { AddressId = addressId, UserId = userId },
+            commandType: CommandType.StoredProcedure);
     }
 
     public async Task<string?> DeleteAsync(int addressId)

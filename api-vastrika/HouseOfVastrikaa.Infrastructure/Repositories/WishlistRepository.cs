@@ -1,7 +1,6 @@
 using System.Data;
 using Dapper;
 using HouseOfVastrikaa.Application.Services;
-using HouseOfVastrikaa.Domain.Entities;
 using HouseOfVastrikaa.Infrastructure.Data;
 
 namespace HouseOfVastrikaa.Infrastructure.Repositories;
@@ -28,12 +27,28 @@ public class WishlistRepository : IWishlistRepository
             commandType: CommandType.StoredProcedure);
     }
 
-    public async Task<IEnumerable<dynamic>> GetByUserAsync(int userId)
+    public async Task<IEnumerable<WishlistItemDto>> GetByUserAsync(int userId)
     {
         using var conn = _db.Create();
-        return await conn.QueryAsync("sp_Wishlists_GetByUser",
+        var rows = await conn.QueryAsync("sp_Wishlists_GetByUser",
             new { UserId = userId },
             commandType: CommandType.StoredProcedure);
+
+        return rows.Select(row =>
+        {
+            var d = (IDictionary<string, object>)row;
+            d.TryGetValue("ProductId", out var pid);
+            d.TryGetValue("ProductName", out var pname);
+            d.TryGetValue("ImageUrl", out var imgUrl);
+            d.TryGetValue("DefaultImage", out var defImg);
+            d.TryGetValue("Price", out var price);
+            return new WishlistItemDto(
+                Convert.ToInt32(pid),
+                (string?)pname ?? "",
+                (string?)imgUrl ?? (string?)defImg,
+                Convert.ToDecimal(price)
+            );
+        });
     }
 
     public async Task<bool> CheckAsync(int userId, int productId)

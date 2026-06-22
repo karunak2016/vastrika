@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 
 namespace HouseOfVastrikaa.Application.Services;
 
+public record WishlistItemDto(int ProductId, string ProductName, string? ImageUrl, decimal Price);
+
 public class WishlistService : IWishlistService
 {
     private readonly IWishlistRepository _repo;
@@ -14,7 +16,7 @@ public class WishlistService : IWishlistService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<dynamic>> GetWishlistAsync(int userId)
+    public async Task<IEnumerable<WishlistItemDto>> GetWishlistAsync(int userId)
     {
         try
         {
@@ -77,6 +79,6 @@ public interface IWishlistRepository
 {
     Task AddAsync(int userId, int productId);
     Task RemoveAsync(int userId, int productId);
-    Task<IEnumerable<dynamic>> GetByUserAsync(int userId);
+    Task<IEnumerable<WishlistItemDto>> GetByUserAsync(int userId);
     Task<bool> CheckAsync(int userId, int productId);
 }

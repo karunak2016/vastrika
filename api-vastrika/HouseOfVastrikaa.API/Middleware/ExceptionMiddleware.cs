@@ -34,6 +34,18 @@ public class ExceptionMiddleware
         {
             await WriteErrorAsync(context, HttpStatusCode.BadRequest, ex.Message);
         }
+        catch (SqlException ex) when (ex.Number is 2601 or 2627)
+        {
+            _logger.LogWarning(ex, "Unique constraint violation");
+            string field;
+            if (ex.Message.Contains("Email", StringComparison.OrdinalIgnoreCase))
+                field = "Email";
+            else if (ex.Message.Contains("Phone", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("UQ_Users_Phone", StringComparison.OrdinalIgnoreCase))
+                field = "Mobile number";
+            else
+                field = "Value";
+            await WriteErrorAsync(context, HttpStatusCode.Conflict, $"{field} is already in use by another account.");
+        }
         catch (SqlException ex)
         {
             _logger.LogError(ex, "Database error");
