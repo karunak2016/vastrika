@@ -19,4 +19,7 @@ export const authApi = {
 
   updateProfile: (data: { name: string; email: string; phone?: string }) =>
     apiClient.post('/auth/profile/update', data).then((r) => r.data),
+
+  setPassword: (newPassword: string) =>
+    apiClient.post('/auth/profile/set-password', { newPassword }).then((r) => r.data),
 }

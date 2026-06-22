@@ -60,6 +60,12 @@ export function Profile() {
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileMsg, setProfileMsg] = useState('')
 
+  // Set password (for OTP users)
+  const [showSetPassword, setShowSetPassword] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' })
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordMsg, setPasswordMsg] = useState('')
+
   function startEditProfile() {
     setProfileForm({ name: user?.name ?? '', email: isOtpUser ? '' : (user?.email ?? ''), phone: '' })
     setEditingProfile(true)
@@ -81,6 +87,26 @@ export function Profile() {
       setProfileMsg(`Failed to update profile: ${msg}`)
     } finally {
       setProfileSaving(false)
+    }
+  }
+
+  async function handleSetPassword(e: React.FormEvent) {
+    e.preventDefault()
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMsg('Passwords do not match.')
+      return
+    }
+    setPasswordSaving(true)
+    try {
+      await authApi.setPassword(passwordForm.newPassword)
+      setPasswordMsg('Password set! You can now login with your email and password.')
+      setShowSetPassword(false)
+      setPasswordForm({ newPassword: '', confirmPassword: '' })
+    } catch (err: any) {
+      const msg = err?.response?.data?.error ?? err?.message ?? 'Unknown error'
+      setPasswordMsg(`Failed: ${msg}`)
+    } finally {
+      setPasswordSaving(false)
     }
   }
 
@@ -205,6 +231,52 @@ export function Profile() {
           </div>
         )}
       </div>
+
+      {/* Set Password — only for OTP users */}
+      {isOtpUser && (
+        <div className="rounded-lg border border-gray-100 bg-white p-6 mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-semibold text-gray-900">Set Password</h2>
+            {!showSetPassword && (
+              <button onClick={() => { setShowSetPassword(true); setPasswordMsg('') }} className="text-sm text-primary-800 hover:underline">
+                Set now
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-gray-500 mb-3">
+            Set a password so you can also login with your email and password next time.
+          </p>
+          {passwordMsg && (
+            <div className={`mb-3 rounded border px-4 py-3 text-sm ${passwordMsg.startsWith('Failed') || passwordMsg.startsWith('Passwords') ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
+              {passwordMsg}
+            </div>
+          )}
+          {showSetPassword && (
+            <form onSubmit={handleSetPassword} className="space-y-3">
+              <Input
+                label="New Password"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(e) => setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))}
+                placeholder="Minimum 6 characters"
+                required
+              />
+              <Input
+                label="Confirm Password"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                placeholder="Re-enter password"
+                required
+              />
+              <div className="flex gap-2 pt-1">
+                <Button type="submit" size="sm" loading={passwordSaving}>Save Password</Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => setShowSetPassword(false)}>Cancel</Button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
 
       {/* Addresses */}
       <div className="rounded-lg border border-gray-100 bg-white p-6">
