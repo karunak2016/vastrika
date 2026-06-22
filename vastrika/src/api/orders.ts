@@ -13,5 +13,5 @@ export const ordersApi = {
     apiClient.post<Order>('/orders', data).then((r) => r.data),
 
   cancel: (id: number) =>
-    apiClient.put(`/orders/${id}/cancel`).then((r) => r.data),
+    apiClient.post(`/orders/${id}/cancel`).then((r) => r.data),
 }
