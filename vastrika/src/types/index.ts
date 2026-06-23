@@ -172,6 +172,7 @@ export interface OrderItem {
 
 export interface Order {
   id: number
+  itemCount?: number
   totalAmount: number
   discountAmount: number
   finalAmount: number

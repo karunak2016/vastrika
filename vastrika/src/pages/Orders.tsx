@@ -72,7 +72,7 @@ export function Orders() {
                 </div>
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <p className="text-sm text-gray-500">{order.items?.length ?? 0} item{(order.items?.length ?? 0) !== 1 ? 's' : ''}</p>
+                <p className="text-sm text-gray-500">{order.itemCount ?? order.items?.length ?? 0} item{(order.itemCount ?? order.items?.length ?? 0) !== 1 ? 's' : ''}</p>
                 <p className="font-semibold text-primary-800">₹{order.finalAmount.toLocaleString('en-IN')}</p>
               </div>
             </Link>
