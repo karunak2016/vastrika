@@ -3,8 +3,11 @@ namespace HouseOfVastrikaa.Domain.Entities;
 public class Order
 {
     public int Id { get; set; }
+    public int OrderId { get => Id; set => Id = value; }
     public int UserId { get; set; }
+    public int CustomerId { get => UserId; set => UserId = value; }
     public int AddressId { get; set; }
+    public int ItemCount { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal FinalAmount { get; set; }

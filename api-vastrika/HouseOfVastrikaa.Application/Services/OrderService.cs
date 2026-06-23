@@ -155,6 +155,7 @@ public class OrderService : IOrderService
     private static OrderDto MapToDto(Order o, IEnumerable<OrderItem>? items = null) => new()
     {
         Id = o.Id,
+        ItemCount = o.ItemCount,
         TotalAmount = o.TotalAmount,
         DiscountAmount = o.DiscountAmount,
         FinalAmount = o.FinalAmount,

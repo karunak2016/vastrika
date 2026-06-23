@@ -54,8 +54,15 @@ public class OrderRepository : IOrderRepository
         p.Add("@Notes", notes);
         p.Add("@ItemsJson", JsonSerializer.Serialize(items));
         p.Add("@NewOrderId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+        p.Add("@Success", dbType: DbType.Boolean, direction: ParameterDirection.Output);
+        p.Add("@ErrorMessage", dbType: DbType.String, size: 200, direction: ParameterDirection.Output);
 
         await conn.ExecuteAsync("sp_Orders_Place", p, commandType: CommandType.StoredProcedure);
+
+        var success = p.Get<bool>("@Success");
+        if (!success)
+            throw new InvalidOperationException(p.Get<string?>("@ErrorMessage") ?? "Failed to place order.");
+
         return p.Get<int>("@NewOrderId");
     }
 

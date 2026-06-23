@@ -11,6 +11,7 @@ public class OrderDto
     public string OrderStatus { get; set; } = string.Empty;
     public string? AWBCode { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int ItemCount { get; set; }
     public List<OrderItemDto> Items { get; set; } = new();
 }
 

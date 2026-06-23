@@ -11,13 +11,15 @@ public class PaymentService : IPaymentService
 {
     private readonly IConfiguration _config;
     private readonly IOrderRepository _orderRepo;
+    private readonly ICartRepository _cartRepo;
     private readonly IRazorpayClient _razorpay;
     private readonly ILogger<PaymentService> _logger;
 
-    public PaymentService(IConfiguration config, IOrderRepository orderRepo, IRazorpayClient razorpay, ILogger<PaymentService> logger)
+    public PaymentService(IConfiguration config, IOrderRepository orderRepo, ICartRepository cartRepo, IRazorpayClient razorpay, ILogger<PaymentService> logger)
     {
         _config = config;
         _orderRepo = orderRepo;
+        _cartRepo = cartRepo;
         _razorpay = razorpay;
         _logger = logger;
     }
@@ -32,8 +34,6 @@ public class PaymentService : IPaymentService
 
             var amountInPaise = (long)(order.FinalAmount * 100);
             var razorpayOrderId = await _razorpay.CreateOrderAsync(amountInPaise, "INR", orderId.ToString());
-
-            await _orderRepo.UpdateStatusAsync(orderId, null, null, null, null);
 
             _logger.LogInformation("Razorpay order {RazorpayOrderId} created for orderId {OrderId}", razorpayOrderId, orderId);
             return new PaymentOrderResponseDto
@@ -70,6 +70,8 @@ public class PaymentService : IPaymentService
             }
 
             await _orderRepo.UpdateStatusAsync(dto.OrderId, "Confirmed", "Paid", null, null);
+            var (order, _) = await _orderRepo.GetByIdAsync(dto.OrderId);
+            if (order != null) await _cartRepo.ClearAsync(order.UserId);
             _logger.LogInformation("Payment verified and order {OrderId} confirmed", dto.OrderId);
             return true;
         }
