@@ -24,4 +24,6 @@ public class Order
     public string? CancelReason { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public string? CustomerName { get; set; }
+    public string? CustomerEmail { get; set; }
 }

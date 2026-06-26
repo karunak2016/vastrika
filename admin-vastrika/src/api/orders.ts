@@ -8,7 +8,7 @@ export const ordersApi = {
       .then((r) => r.data),
 
   getById: (id: number) =>
-    apiClient.get<Order>(`/orders/${id}`).then((r) => r.data),
+    apiClient.get<Order>(`/orders/admin/${id}`).then((r) => r.data),
 
   updateStatus: (id: number, status: string) =>
     apiClient.post(`/orders/admin/${id}/update-status`, { status }).then((r) => r.data),

@@ -3,6 +3,9 @@ namespace HouseOfVastrikaa.Application.DTOs.Order;
 public class OrderDto
 {
     public int Id { get; set; }
+    public int UserId { get; set; }
+    public string? CustomerName { get; set; }
+    public string? CustomerEmail { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal FinalAmount { get; set; }

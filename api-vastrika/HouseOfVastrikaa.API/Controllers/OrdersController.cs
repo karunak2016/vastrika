@@ -91,6 +91,23 @@ public class OrdersController : ControllerBase
         }
     }
 
+    [HttpGet("admin/{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetByIdAdmin(int id)
+    {
+        try
+        {
+            _logger.LogInformation("Admin get order {OrderId}", id);
+            var order = await _orders.GetByIdAdminAsync(id);
+            return order == null ? NotFound() : Ok(order);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Admin get order {OrderId} failed", id);
+            throw;
+        }
+    }
+
     [HttpGet("admin")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)

@@ -52,6 +52,22 @@ public class OrderService : IOrderService
         }
     }
 
+    public async Task<OrderDto?> GetByIdAdminAsync(int orderId)
+    {
+        try
+        {
+            _logger.LogInformation("Admin get order {OrderId}", orderId);
+            var (header, items) = await _repo.GetByIdAsync(orderId);
+            if (header == null) return null;
+            return MapToDto(header, items);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Admin get order {OrderId} failed", orderId);
+            throw;
+        }
+    }
+
     public async Task<OrderDto> PlaceOrderAsync(int userId, PlaceOrderDto dto)
     {
         try
@@ -155,6 +171,9 @@ public class OrderService : IOrderService
     private static OrderDto MapToDto(Order o, IEnumerable<OrderItem>? items = null) => new()
     {
         Id = o.Id,
+        UserId = o.UserId,
+        CustomerName = o.CustomerName,
+        CustomerEmail = o.CustomerEmail,
         ItemCount = o.ItemCount,
         TotalAmount = o.TotalAmount,
         DiscountAmount = o.DiscountAmount,

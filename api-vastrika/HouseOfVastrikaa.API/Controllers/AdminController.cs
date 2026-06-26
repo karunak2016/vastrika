@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text.Json.Serialization;
 using Dapper;
 using HouseOfVastrikaa.Infrastructure.Data;
 using HouseOfVastrikaa.Infrastructure.Repositories;
@@ -34,8 +35,8 @@ public class AdminController : ControllerBase
                 "sp_Dashboard_GetStats",
                 commandType: CommandType.StoredProcedure);
 
-            var summary = await multi.ReadSingleOrDefaultAsync();
-            var monthly = await multi.ReadAsync();
+            var summary = await multi.ReadSingleOrDefaultAsync<DashboardSummaryDto>();
+            var monthly = await multi.ReadAsync<MonthlyStatsDto>();
             return Ok(new { summary, monthly });
         }
         catch (Exception ex)
@@ -76,4 +77,25 @@ public class AdminController : ControllerBase
             throw;
         }
     }
+}
+
+public class DashboardSummaryDto
+{
+    public int TotalOrders { get; set; }
+    public decimal TotalRevenue { get; set; }
+    public int TotalCustomers { get; set; }
+    public int TotalProducts { get; set; }
+    public int PendingOrders { get; set; }
+    public int OrdersToday { get; set; }
+    public decimal RevenueToday { get; set; }
+    public int LowStockProducts { get; set; }
+    public int ShippedOrders { get; set; }
+}
+
+public class MonthlyStatsDto
+{
+    public string Month { get; set; } = "";
+    public decimal Revenue { get; set; }
+    [JsonPropertyName("orders")]
+    public int OrderCount { get; set; }
 }
