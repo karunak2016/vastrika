@@ -175,6 +175,7 @@ export interface Order {
   itemCount?: number
   totalAmount: number
   discountAmount: number
+  shippingFee: number
   finalAmount: number
   paymentMethod: string
   paymentStatus: string
@@ -188,6 +189,7 @@ export interface PlaceOrderRequest {
   addressId: number
   paymentMethod: string
   couponCode?: string
+  shippingFee: number
 }
 
 // ─── Payment ─────────────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ import { ordersApi } from '../api/orders'
 import { paymentApi } from '../api/payment'
 import { addressesApi } from '../api/addresses'
 import { couponsApi, type ActiveOffer, type CouponValidationResult } from '../api/coupons'
+import { settingsApi } from '../api/settings'
 import { useCartStore } from '../stores/cartStore'
 import { useAuthStore } from '../stores/authStore'
 import { Button } from '../components/ui/Button'
@@ -32,10 +33,14 @@ export function Checkout() {
   const [couponResult, setCouponResult] = useState<CouponValidationResult | null>(null)
   const [validating, setValidating] = useState(false)
   const [activeOffers, setActiveOffers] = useState<ActiveOffer[]>([])
+  const [shippingFeeRate, setShippingFeeRate] = useState(99)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(1999)
 
   useEffect(() => {
-    Promise.all([cartApi.get(), addressesApi.list(), couponsApi.getActiveOffers()])
-      .then(([c, addrs, offers]) => {
+    Promise.all([cartApi.get(), addressesApi.list(), couponsApi.getActiveOffers(), settingsApi.getShipping()])
+      .then(([c, addrs, offers, shippingConfig]) => {
+        setShippingFeeRate(shippingConfig.shippingFee)
+        setFreeShippingThreshold(shippingConfig.freeShippingThreshold)
         setCart(c)
         setAddresses(addrs)
         setActiveOffers(offers)
@@ -82,7 +87,7 @@ export function Checkout() {
   }
 
   const discount = couponResult?.isValid ? couponResult.discountAmount : 0
-  const shipping = cart && cart.total >= 1999 ? 0 : 99
+  const shipping = cart && cart.total >= freeShippingThreshold ? 0 : shippingFeeRate
   const finalTotal = cart ? cart.total - discount + shipping : 0
 
   async function handlePlaceOrder() {
@@ -90,7 +95,7 @@ export function Checkout() {
     setPlacing(true)
     try {
       const appliedCode = couponResult?.isValid ? couponCode.trim() : undefined
-      const order: Order = await ordersApi.place({ addressId: selectedAddressId, paymentMethod, couponCode: appliedCode })
+      const order: Order = await ordersApi.place({ addressId: selectedAddressId, paymentMethod, couponCode: appliedCode, shippingFee: shipping })
 
       if (paymentMethod === 'COD') {
         clearCart()

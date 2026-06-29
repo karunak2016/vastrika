@@ -12,6 +12,18 @@ public class SettingsController : ControllerBase
 
     public SettingsController(ISettingsRepository repo) => _repo = repo;
 
+    [HttpGet("shipping")]
+    public async Task<IActionResult> GetShipping()
+    {
+        var fee = await _repo.GetByKeyAsync("ShippingFee");
+        var threshold = await _repo.GetByKeyAsync("FreeShippingThreshold");
+        return Ok(new
+        {
+            shippingFee = decimal.Parse(fee?.Value ?? "99"),
+            freeShippingThreshold = decimal.Parse(threshold?.Value ?? "1999")
+        });
+    }
+
     [HttpGet("{key}")]
     public async Task<IActionResult> Get(string key)
     {
@@ -20,7 +32,7 @@ public class SettingsController : ControllerBase
         return Ok(new { key = setting.Key, value = setting.Value });
     }
 
-    [HttpPut("{key}")]
+    [HttpPost("{key}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Set(string key, [FromBody] SettingValueDto dto)
     {

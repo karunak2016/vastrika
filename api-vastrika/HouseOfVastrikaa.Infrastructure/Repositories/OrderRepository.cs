@@ -40,7 +40,7 @@ public class OrderRepository : IOrderRepository
     }
 
     public async Task<int> PlaceAsync(int userId, int addressId, string paymentMethod,
-        decimal totalAmount, decimal discountAmount, decimal finalAmount,
+        decimal totalAmount, decimal discountAmount, decimal shippingFee, decimal finalAmount,
         string? notes, object[] items)
     {
         using var conn = _db.Create();
@@ -50,6 +50,7 @@ public class OrderRepository : IOrderRepository
         p.Add("@PaymentMethod", paymentMethod);
         p.Add("@TotalAmount", totalAmount);
         p.Add("@DiscountAmount", discountAmount);
+        p.Add("@ShippingFee", shippingFee);
         p.Add("@FinalAmount", finalAmount);
         p.Add("@Notes", notes);
         p.Add("@ItemsJson", JsonSerializer.Serialize(items));

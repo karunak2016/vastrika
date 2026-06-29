@@ -93,7 +93,8 @@ public class OrderService : IOrderService
                 }
             }
 
-            var finalAmount = total - discountAmount;
+            var shippingFee = dto.ShippingFee;
+            var finalAmount = total - discountAmount + shippingFee;
 
             var itemsJson = itemList.Select(i => (object)new
             {
@@ -105,7 +106,7 @@ public class OrderService : IOrderService
             }).ToArray();
 
             var orderId = await _repo.PlaceAsync(userId, dto.AddressId, dto.PaymentMethod,
-                total, discountAmount, finalAmount, null, itemsJson);
+                total, discountAmount, shippingFee, finalAmount, null, itemsJson);
 
             var (header, orderItems) = await _repo.GetByIdAsync(orderId);
             _logger.LogInformation("Order {OrderId} placed for user {UserId}", orderId, userId);
@@ -158,7 +159,7 @@ public class OrderService : IOrderService
         try
         {
             _logger.LogInformation("Update status of order {OrderId} to {Status}", orderId, dto.Status);
-            await _repo.UpdateStatusAsync(orderId, dto.Status.ToString(), null, null, string.IsNullOrWhiteSpace(dto.AwbCode) ? null : dto.AwbCode);
+            await _repo.UpdateStatusAsync(orderId, dto.Status, null, null, string.IsNullOrWhiteSpace(dto.AwbCode) ? null : dto.AwbCode);
             _logger.LogInformation("Order {OrderId} status updated to {Status}", orderId, dto.Status);
         }
         catch (Exception ex)
@@ -177,6 +178,7 @@ public class OrderService : IOrderService
         ItemCount = o.ItemCount,
         TotalAmount = o.TotalAmount,
         DiscountAmount = o.DiscountAmount,
+        ShippingFee = o.ShippingFee,
         FinalAmount = o.FinalAmount,
         PaymentMethod = o.PaymentMethod,
         PaymentStatus = o.PaymentStatus,
@@ -200,7 +202,7 @@ public interface IOrderRepository
     Task<(IEnumerable<Order> Items, int Total)> GetByUserAsync(int userId, int page, int pageSize);
     Task<(Order? Header, IEnumerable<OrderItem> Items)> GetByIdAsync(int orderId);
     Task<int> PlaceAsync(int userId, int addressId, string paymentMethod,
-        decimal totalAmount, decimal discountAmount, decimal finalAmount,
+        decimal totalAmount, decimal discountAmount, decimal shippingFee, decimal finalAmount,
         string? notes, object[] items);
     Task<(bool Success, string? Error)> CancelAsync(int orderId, int userId, string? cancelReason);
     Task<(IEnumerable<Order> Items, int Total)> GetAllAsync(string? orderStatus, string? paymentStatus,

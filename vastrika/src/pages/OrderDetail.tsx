@@ -102,6 +102,12 @@ export function OrderDetail() {
                 <span>Discount</span><span>-₹{order.discountAmount.toLocaleString('en-IN')}</span>
               </div>
             )}
+            <div className="flex justify-between text-gray-600">
+              <span>Shipping</span>
+              <span className={order.shippingFee === 0 ? 'text-green-600' : ''}>
+                {order.shippingFee === 0 ? 'FREE' : `₹${order.shippingFee.toLocaleString('en-IN')}`}
+              </span>
+            </div>
             <div className="flex justify-between font-semibold text-gray-900 pt-1 border-t">
               <span>Total</span>
               <span className="text-primary-800">₹{order.finalAmount.toLocaleString('en-IN')}</span>
