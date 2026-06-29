@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom'
 import { ChevronLeft, Truck } from 'lucide-react'
 import type { Order } from '../types'
 import { ordersApi } from '../api/orders'
-import { shippingApi } from '../api/shipping'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Spinner } from '../components/ui/Spinner'
@@ -26,37 +25,21 @@ export function OrderDetail() {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [updatingStatus, setUpdatingStatus] = useState(false)
-  const [creatingShipment, setCreatingShipment] = useState(false)
-  const [shipmentAwb, setShipmentAwb] = useState('')
-  const [shipError, setShipError] = useState('')
+  const [awbInput, setAwbInput] = useState('')
 
   useEffect(() => {
     if (!id) return
     ordersApi.getById(Number(id)).then(setOrder).finally(() => setLoading(false))
   }, [id])
 
-  async function handleStatusUpdate(status: string) {
+  async function handleStatusUpdate(status: string, awbCode?: string) {
     if (!order) return
     setUpdatingStatus(true)
     try {
-      await ordersApi.updateStatus(order.id, status)
-      setOrder((prev) => prev ? { ...prev, orderStatus: status } : null)
+      await ordersApi.updateStatus(order.id, status, awbCode || undefined)
+      setOrder((prev) => prev ? { ...prev, orderStatus: status, awbCode: awbCode || prev.awbCode } : null)
     } finally {
       setUpdatingStatus(false)
-    }
-  }
-
-  async function handleCreateShipment() {
-    if (!order) return
-    setCreatingShipment(true)
-    setShipError('')
-    try {
-      const res = await shippingApi.createShipment(order.id)
-      setShipmentAwb(res.awbCode)
-    } catch {
-      setShipError('Failed to create shipment. Check Shiprocket configuration.')
-    } finally {
-      setCreatingShipment(false)
     }
   }
 
@@ -95,11 +78,36 @@ export function OrderDetail() {
 
       {/* Status update */}
       {order.orderStatus !== 'Delivered' && order.orderStatus !== 'Cancelled' && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Update Order Status</h2>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-gray-700">Update Order Status</h2>
+
+          {/* AWB input shown when about to ship */}
+          {order.orderStatus === 'Confirmed' && (
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block flex items-center gap-1">
+                <Truck className="h-3 w-3" /> Tracking / AWB Number (optional)
+              </label>
+              {order.awbCode ? (
+                <p className="text-sm font-mono text-green-700 font-medium">{order.awbCode}</p>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="e.g. 123456789012"
+                  value={awbInput}
+                  onChange={(e) => setAwbInput(e.target.value)}
+                  className="w-full max-w-xs rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:border-primary-800 focus:outline-none"
+                />
+              )}
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2">
             {nextStatus && (
-              <Button size="sm" loading={updatingStatus} onClick={() => handleStatusUpdate(nextStatus)}>
+              <Button
+                size="sm"
+                loading={updatingStatus}
+                onClick={() => handleStatusUpdate(nextStatus, nextStatus === 'Shipped' ? awbInput : undefined)}
+              >
                 Mark as {nextStatus}
               </Button>
             )}
@@ -107,25 +115,6 @@ export function OrderDetail() {
               Cancel Order
             </Button>
           </div>
-        </div>
-      )}
-
-      {/* Shipment */}
-      {order.orderStatus === 'Confirmed' && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <Truck className="h-4 w-4" /> Shiprocket Shipment
-          </h2>
-          {shipmentAwb || order.awbCode ? (
-            <p className="text-sm text-green-700 font-medium">Shipment created — AWB: <span className="font-mono">{shipmentAwb || order.awbCode}</span></p>
-          ) : (
-            <>
-              {shipError && <p className="mb-2 text-sm text-red-600">{shipError}</p>}
-              <Button size="sm" variant="secondary" loading={creatingShipment} onClick={handleCreateShipment}>
-                Create Shipment
-              </Button>
-            </>
-          )}
         </div>
       )}
 

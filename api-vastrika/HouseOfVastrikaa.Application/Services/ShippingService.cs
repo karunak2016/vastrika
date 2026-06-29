@@ -35,10 +35,10 @@ public class ShippingService : IShippingService
         try
         {
             _logger.LogInformation("Create shipment for order {OrderId}", orderId);
-            var (order, _) = await _orderRepo.GetByIdAsync(orderId);
+            var (order, items) = await _orderRepo.GetByIdAsync(orderId);
             if (order == null) throw new KeyNotFoundException("Order not found.");
 
-            var awbCode = await _shiprocket.CreateShipmentAsync(order);
+            var awbCode = await _shiprocket.CreateShipmentAsync(order, items);
             await _orderRepo.UpdateStatusAsync(orderId, "Shipped", null, null, awbCode);
             _logger.LogInformation("Shipment created for order {OrderId} AWB={AWBCode}", orderId, awbCode);
             return awbCode;
@@ -68,6 +68,6 @@ public class ShippingService : IShippingService
 public interface IShiprocketClient
 {
     Task<bool> CheckServiceabilityAsync(string pincode);
-    Task<string> CreateShipmentAsync(HouseOfVastrikaa.Domain.Entities.Order order);
+    Task<string> CreateShipmentAsync(HouseOfVastrikaa.Domain.Entities.Order order, IEnumerable<HouseOfVastrikaa.Domain.Entities.OrderItem> items);
     Task<object> TrackAsync(string awbCode);
 }

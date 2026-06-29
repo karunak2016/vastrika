@@ -158,7 +158,7 @@ public class OrderService : IOrderService
         try
         {
             _logger.LogInformation("Update status of order {OrderId} to {Status}", orderId, dto.Status);
-            await _repo.UpdateStatusAsync(orderId, dto.Status.ToString(), null, null, null);
+            await _repo.UpdateStatusAsync(orderId, dto.Status.ToString(), null, null, string.IsNullOrWhiteSpace(dto.AwbCode) ? null : dto.AwbCode);
             _logger.LogInformation("Order {OrderId} status updated to {Status}", orderId, dto.Status);
         }
         catch (Exception ex)

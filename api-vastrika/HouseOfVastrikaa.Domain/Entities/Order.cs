@@ -26,4 +26,12 @@ public class Order
     public DateTime? UpdatedAt { get; set; }
     public string? CustomerName { get; set; }
     public string? CustomerEmail { get; set; }
+    public string? CustomerPhone { get; set; }
+    public string? DeliveryName { get; set; }
+    public string? DeliveryPhone { get; set; }
+    public string? AddressLine1 { get; set; }
+    public string? AddressLine2 { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Pincode { get; set; }
 }
